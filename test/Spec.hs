@@ -1,2 +1,6 @@
+import Test.Hspec
+import qualified Data.Queue.MutableSpec as Q
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec $ do
+    Q.spec    
