@@ -1,0 +1,28 @@
+name:                hgraphs
+version:             0.1.0.0
+github:              "larandaA/hgraphs"
+author:              "Alexandra Ryzhevich"
+maintainer:          "larandaansil@gmail.com"
+copyright:           "2020 Alexandra Ryzhevich"
+
+extra-source-files:
+- README.md
+
+description:         A graph processing library.
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+tests:
+  hgraphs-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hgraphs
