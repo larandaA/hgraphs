@@ -71,6 +71,12 @@ buildSpec = describe "build" $ do
         (G.deg 1 g) `shouldBe` 1
         (G.deg 2 g) `shouldBe` 2
 
+    it "should cause error because of incorrect edge usage" $ do
+        action `shouldThrow` errorCall "Incorrect edge"
+      where
+        action = do
+            let g = G.build $ (G.edge 0 1 ())
+            (G.numVerteces g) `shouldBe` 0
 
 spec :: Spec
 spec = describe "Data.Graph" $ do
