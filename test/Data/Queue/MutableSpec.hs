@@ -19,7 +19,7 @@ newSpec = describe "new" $ do
 
 
 newReserveSpec :: Spec
-newReserveSpec = describe "new" $ do
+newReserveSpec = describe "newReserve" $ do
 
     it "should create empty queue" $ do
 
@@ -40,6 +40,6 @@ newReserveSpec = describe "new" $ do
         capacity `shouldBe` 42
 
 spec :: Spec
-spec = do
+spec = describe "Data.Queue.Mutable" $ do
     newSpec
     newReserveSpec
