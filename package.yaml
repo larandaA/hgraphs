@@ -12,6 +12,7 @@ description:         A graph processing library.
 
 dependencies:
 - base >= 4.7 && < 5
+- mtl
 - vector
 
 library:

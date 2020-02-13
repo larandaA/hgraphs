@@ -1,7 +1,11 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Data.Graph where
 
 import Control.Monad
 import Control.Monad.ST
+import qualified Control.Monad.State as State
+import Control.Monad.State (State)
 import qualified Data.Vector.Mutable as VM
 import qualified Data.Vector as V
 import Data.Vector ((!))
@@ -50,18 +54,49 @@ buildFromList vs es = Graph
             VM.modify esL ((eAdj_ e):) (eFrom e)
         return esL
 
-{-
-data GraphBuilder s a b = GraphBuilder {  }
+data GraphBuilderState a b = GraphBuilderState
+    { gbsCount :: Int
+    , gbsVerts :: [a]
+    , gbsEdges :: [Edge b]
+    }
 
-vertex :: a -> GraphBuilder s a b Vertex
-vertex = undefined
+newtype GraphBuilder a b t = GraphBuilder (State (GraphBuilderState a b) t)
+    deriving (Functor, Applicative, Monad)
 
-edge :: Vertex -> Vertex -> b -> GraphBuilder s a b ()
-edge = undefined
+build :: GraphBuilder a b t -> Graph a b
+build (GraphBuilder builder) =
+    buildFromList (gbsVerts state) (gbsEdges state)
+  where
+    state = State.execState builder $ GraphBuilderState
+        { gbsCount = 0
+        , gbsVerts = []
+        , gbsEdges = []
+        }
 
-build :: GraphBuilder s a b () -> Graph a b
-build = undefined
--}
+vertex :: a -> GraphBuilder a b Vertex
+vertex v = GraphBuilder $ do
+    state <- State.get
+    State.put $ state
+        { gbsCount = gbsCount state + 1
+        , gbsVerts = v:(gbsVerts state)
+        }
+    pure (gbsCount state)
+
+edge :: Vertex -> Vertex -> b -> GraphBuilder a b ()
+edge v u l = GraphBuilder $ do
+    state <- State.get
+    if (v >= gbsCount state || u >= gbsCount state) 
+    then error "Incorrect edge"
+    else State.put $ state
+        { gbsEdges = edge:(gbsEdges state)
+        }
+  where
+    edge = Edge
+        { eFrom = v
+        , eTo = u
+        , eVal = l
+        }
+
 
 numVerteces :: Graph a b -> Int
 numVerteces = V.length . adjs
