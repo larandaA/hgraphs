@@ -92,3 +92,13 @@ push q x = do
     isFull <- full q
     when isFull (grow_ q)
     push_ q x
+
+drain :: STQueue s e -> ST s [e]
+drain q = do
+    qEmpty <- empty q
+    if qEmpty
+        then return []
+        else do
+            el <- pop q
+            els <- drain q
+            return (el:els)
