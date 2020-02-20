@@ -110,11 +110,39 @@ edges g = V.toList . V.concat . V.toList . V.imap toTuples . adjs $ g
   where
     toTuples i = V.map (\adj -> ((verts g) ! i, aVal adj, (verts g) ! (aTo adj)))
 
-degree :: Graph a b -> Graph (a, Int) b
-degree g = Graph
-    { verts = V.imap (\i val -> (val, V.length ((adjs g) ! i))) (verts g)
-    , adjs = adjs g
+vmap :: (a -> b) -> Graph a e -> Graph b e
+vmap f g = g { verts = V.map f (verts g) }
+
+emap :: (a -> b) -> Graph v a -> Graph v b
+emap f g = g { adjs = V.map (V.map (\adj -> adj { aVal = f (aVal adj) })) (adjs g) }
+
+zip :: Graph a e -> Graph b f -> Graph (a, b) (e, f)
+zip g1 g2 = Graph
+    { verts = V.zip (verts g1) (verts g2)
+    , adjs = V.zipWith zipAdjs (adjs g1) (adjs g2)
     }
+  where
+    zipAdjs = V.zipWith (\adj1 adj2 -> adj1 { aVal = (aVal adj1, aVal adj2) })
+
+succs :: Graph a b -> Graph [(b, a)] b
+succs g = g { verts = V.map (V.toList . V.map (\adj -> (aVal adj, verts g ! (aTo adj)))) (adjs g) }
+
+preds :: Graph a b -> Graph [(a, b)] b
+preds g = g { verts = vs }
+  where
+    vs = V.create $ do
+        vsL <- VM.replicate (numVertices g) []
+        flip V.imapM_ (adjs g) $ \i vAdjs -> do
+            V.forM_ vAdjs $ \adj -> do
+                VM.modify vsL ((verts g ! i, aVal adj):) (aTo adj)
+        return vsL
+
+degree :: Graph a b -> Graph Int b
+degree = vmap length . succs
+-- degree g = Graph
+--     { verts = V.imap (\i val -> (val, V.length ((adjs g) ! i))) (verts g)
+--     , adjs = adjs g
+--     }
 
 bfs_ :: [Node] -> Graph a b -> (V.Vector Node, V.Vector Int)
 bfs_ vs g = runST $ do
