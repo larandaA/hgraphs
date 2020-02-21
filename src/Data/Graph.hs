@@ -7,6 +7,7 @@ import Control.Monad
 import Control.Monad.ST
 import qualified Control.Monad.State as State
 import Control.Monad.State (State)
+import qualified Data.List as L
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Mutable as VM
@@ -157,20 +158,24 @@ degree = vmap length . succs
 --     , adjs = adjs g
 --     }
 
-bfs_ :: [Node] -> Graph a b -> (V.Vector Node, V.Vector Int)
+bfs_ :: [Node] -> Graph a b -> (V.Vector Node, V.Vector Int, V.Vector Node)
 bfs_ vs g = runST $ do
     q <- QM.new
     ordToV <- QM.new
     vToOrd <- VM.replicate n n
+    pred <- VM.replicate n n
+    inQ <- VM.replicate n False
     curOrd <- newSTRef 0
     mapM_ (QM.push q) vs
-    loop q ordToV vToOrd curOrd
+    mapM_ (\v -> VM.write inQ v True) vs
+    loop q ordToV vToOrd pred curOrd inQ
     ordToVList <- QM.drain ordToV
     vToOrdList <- mapM (VM.read vToOrd) [0..(n - 1)]
-    return (V.fromList ordToVList, V.fromList vToOrdList)
+    predList <- mapM (VM.read pred) [0..(n - 1)]
+    return (V.fromList ordToVList, V.fromList vToOrdList, V.fromList predList)
   where
     n = numVertices g
-    loop q ordToV vToOrd curOrd = do
+    loop q ordToV vToOrd pred curOrd inQ = do
         qEmpty <- QM.empty q
         if qEmpty
             then return ()
@@ -181,5 +186,28 @@ bfs_ vs g = runST $ do
                 VM.write vToOrd v ord
                 modifySTRef curOrd (+ 1)
                 V.forM_ ((adjs g) ! v) $ \adjU -> do
-                    uOrd <- VM.read vToOrd (aTo adjU)
-                    when (uOrd == n) $ QM.push q (aTo adjU)
+                    uInQ <- VM.read inQ (aTo adjU)
+                    when (not uInQ) $ do
+                        QM.push q (aTo adjU)
+                        VM.write pred (aTo adjU) v
+                        VM.write inQ (aTo adjU) True
+                loop q ordToV vToOrd pred curOrd inQ
+
+transformu :: (a -> Bool) -> (a -> [(e, b)] -> b) -> (a -> b) -> Graph a e -> Graph b e
+transformu isStart f defaultVal g = g { verts = vs }
+  where
+    n = numVertices g
+    startNodes = V.toList. V.map fst . V.filter (isStart . snd) . V.imap (,) . verts $ g
+    (ordToV, vToOrd, pred) = bfs_ startNodes g
+    vs = V.create $ do
+        vsV <- VM.new n
+        V.forM_ (V.reverse ordToV) $ \v -> do
+            let aChildren = V.toList . V.filter (\adj -> (pred ! (aTo adj)) == v) $ (adjs g ! v)
+            bVals <- mapM (VM.read vsV . aTo) aChildren
+            let bChildren = L.zip (L.map aVal aChildren) bVals
+            VM.write vsV v (f (verts g ! v) bChildren)
+        flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
+        return vsV
+
+-- transformd :: (a -> Bool) -> ([(b, e)] -> a -> b) -> (a -> b) -> Graph a e -> Graph b e
+-- transformd = undefined

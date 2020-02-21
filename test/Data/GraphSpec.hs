@@ -391,6 +391,79 @@ transposeSpec = describe "transpose" $ do
             , ("c", "bc", "b")
             ]
 
+transformuSpec :: Spec
+transformuSpec = describe "transformu" $ do
+
+    it "should create empty graph" $ do
+
+        let g = G.transformu (\_ -> True) (\_ _ -> ()) (\_ -> ()) (G.build (pure ()))
+
+        length (G.vertices g) `shouldBe` 0
+        length (G.edges g) `shouldBe` 0
+
+    it "should transform all vertices to default values" $ do
+
+        let g = G.build $ do {
+            G.vertex "v";
+            G.vertex "u";
+            G.vertex "w";
+            pure ()
+        }
+        let g' = G.transformu (\_ -> False) (\_ _ -> 0) (\_ -> 1) g
+
+        G.vertices g' `shouldMatchList` [1, 1, 1]
+        length (G.edges g) `shouldBe` 0
+
+    it "should transform all vertices to non-default values" $ do
+
+        let g = G.build $ do {
+            G.vertex "v";
+            G.vertex "u";
+            G.vertex "w";
+            pure ()
+        }
+        let g' = G.transformu (\_ -> True) (\_ _ -> 0) (\_ -> 1) g
+
+        G.vertices g' `shouldMatchList` [0, 0, 0]
+        length (G.edges g) `shouldBe` 0
+
+    it "should transform all vertices from a component to non-default values" $ do
+
+        let g = G.build $ do {
+            v <- G.vertex "v";
+            u <- G.vertex "u";
+            w <- G.vertex "w";
+            G.edge v w "vw"
+        }
+        let g' = G.transformu (\x -> x == "v") (\_ _ -> 0) (\_ -> 1) g
+
+        G.vertices (G.zip g g') `shouldMatchList` [("v", 0), ("u", 1), ("w", 0)]
+        G.edges (G.zip g g') `shouldBe` [(("v", 0), ("vw", "vw"), ("w", 0))]
+
+    it "should transform all vertices to number of all processed successors" $ do
+
+        let g = G.build $ do {
+            v <- G.vertex "v";
+            u <- G.vertex "u";
+            w <- G.vertex "w";
+            t <- G.vertex "t";
+            r <- G.vertex "r";
+            k <- G.vertex "k";
+
+            G.edge v w "vw";
+            G.edge u t "ut";
+            G.edge w t "wt";
+            G.edge w r "wr";
+            G.edge t u "tu";
+            G.edge t k "tk"
+        }
+        let isStart = (\x -> (x == "v") || (x == "u"))
+        let h = (\_ succs -> if succs == [] then 1 else (+ 1) . L.sum . L.map snd $ succs)
+        let g' = G.transformu isStart h (\_ -> 0) g
+
+        G.vertices (G.zip g g') `shouldMatchList` [("v", 3), ("u", 3), ("w", 2), ("r", 1), ("t", 2), ("k", 1)]
+
+
 spec :: Spec
 spec = describe "Data.Graph" $ do
     buildSpec
@@ -402,3 +475,4 @@ spec = describe "Data.Graph" $ do
     succsSpec
     predsSpec
     transposeSpec
+    transformuSpec
