@@ -348,6 +348,49 @@ predsSpec = describe "preds" $ do
             , ([("a", "ab")], "bc", [("a", "ac"), ("b", "bc")])
             ]
 
+transposeSpec :: Spec
+transposeSpec = describe "transpose" $ do
+
+    it "should create empty graph" $ do
+
+        let g = G.transpose (G.build (pure ()))
+
+        length (G.vertices g) `shouldBe` 0
+        length (G.edges g) `shouldBe` 0
+
+    it "should not change graph without edges" $ do
+
+        let g = G.build $ do {
+            G.vertex "v";
+            G.vertex "u";
+            G.vertex "w";
+            pure ()
+        }
+        let g' = G.transpose g
+
+        G.vertices (G.zip g g') `shouldMatchList` [("v", "v"), ("u", "u"), ("w", "w")]
+        length (G.edges g) `shouldBe` 0
+
+    it "should reverse edges" $ do
+
+        let g = G.build $ do {
+            a <- G.vertex "a";
+            b <- G.vertex "b";
+            c <- G.vertex "c";
+
+            G.edge a b "ab";
+            G.edge a c "ac";
+            G.edge b c "bc"
+        }
+        let g' = G.transpose g
+
+        G.vertices g' `shouldMatchList` ["a", "b", "c"]
+        G.edges g' `shouldMatchList` 
+            [ ("b", "ab", "a")
+            , ("c", "ac", "a")
+            , ("c", "bc", "b")
+            ]
+
 spec :: Spec
 spec = describe "Data.Graph" $ do
     buildSpec
@@ -358,3 +401,4 @@ spec = describe "Data.Graph" $ do
     zipSpec
     succsSpec
     predsSpec
+    transposeSpec

@@ -127,15 +127,28 @@ zip g1 g2 = Graph
 succs :: Graph a b -> Graph [(b, a)] b
 succs g = g { verts = V.map (V.toList . V.map (\adj -> (aVal adj, verts g ! (aTo adj)))) (adjs g) }
 
-preds :: Graph a b -> Graph [(a, b)] b
-preds g = g { verts = vs }
+transpose :: Graph a b -> Graph a b
+transpose g = g { adjs =  V.map V.fromList revAdjs }
   where
-    vs = V.create $ do
-        vsL <- VM.replicate (numVertices g) []
+    revAdjs = V.create $ do
+        adjL <- VM.replicate (numVertices g) []
         flip V.imapM_ (adjs g) $ \i vAdjs -> do
             V.forM_ vAdjs $ \adj -> do
-                VM.modify vsL ((verts g ! i, aVal adj):) (aTo adj)
-        return vsL
+                VM.modify adjL ((adj {aTo = i}):) (aTo adj)
+        return adjL
+
+preds :: Graph a b -> Graph [(a, b)] b
+preds g = g { verts = V.map (V.toList . V.map adjToPred) . adjs . transpose $ g }
+  where
+    adjToPred adj = (verts g ! (aTo adj), aVal adj)
+-- preds g = g { verts = vs }
+--   where
+--     vs = V.create $ do
+--         vsL <- VM.replicate (numVertices g) []
+--         flip V.imapM_ (adjs g) $ \i vAdjs -> do
+--             V.forM_ vAdjs $ \adj -> do
+--                 VM.modify vsL ((verts g ! i, aVal adj):) (aTo adj)
+--         return vsL
 
 degree :: Graph a b -> Graph Int b
 degree = vmap length . succs
