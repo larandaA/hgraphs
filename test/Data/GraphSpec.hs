@@ -200,6 +200,60 @@ emapSpec = describe "emap" $ do
         G.vertices g' `shouldMatchList` ["a", "b", "c"]
         G.edges g' `shouldMatchList` [("b", 1, "a"), ("c", 2, "a"), ("c", 3, "b")]
 
+emapcSpec :: Spec
+emapcSpec = describe "emapc" $ do
+
+    it "should preserve empty graph" $ do
+
+        let g = G.emapc (\(_, e, _) -> e) (G.build (pure ()))
+
+        length (G.vertices g) `shouldBe` 0
+        length (G.edges g) `shouldBe` 0
+
+    it "should not change graph with id function" $ do
+
+        let g = G.build $ do {
+            a <- G.vertex "a";
+            b <- G.vertex "b";
+            c <- G.vertex "c";
+
+            G.edge b a "e1";
+            G.edge c a "e2";
+            G.edge c b "e3"
+        }
+        let g' = G.emapc (\(_, e, _) -> e) g
+
+        G.vertices g' `shouldMatchList` ["a", "b", "c"]
+        G.edges g' `shouldMatchList` [("b", "e1", "a"), ("c", "e2", "a"), ("c", "e3", "b")]
+
+
+    it "should not change graph structure" $ do
+
+        let g = G.build $ do {
+            a <- G.vertex "a";
+            b <- G.vertex "b";
+            c <- G.vertex "c";
+
+            G.edge b a ();
+            G.edge c a ();
+            G.edge c b ();
+            G.edge a b ();
+            G.edge a c ();
+            G.edge b c ()
+        }
+        let reverseEdge (v1, _, v2) = v1 > v2
+        let g' = G.emapc reverseEdge g
+
+        G.vertices g' `shouldMatchList` ["a", "b", "c"]
+        G.edges g' `shouldMatchList`
+            [ ("b", True, "a")
+            , ("c", True, "a")
+            , ("c", True, "b")
+            , ("a", False, "b")
+            , ("a", False, "c")
+            , ("b", False, "c")
+            ]
+
 zipSpec :: Spec
 zipSpec = describe "zip" $ do
 
@@ -543,6 +597,7 @@ spec = describe "Data.Graph" $ do
     edgesSpec
     vmapSpec
     emapSpec
+    emapcSpec
     zipSpec
     succsSpec
     predsSpec

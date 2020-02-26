@@ -117,6 +117,11 @@ vmap f g = g { verts = V.map f (verts g) }
 emap :: (a -> b) -> Graph v a -> Graph v b
 emap f g = g { adjs = V.map (V.map (\adj -> adj { aVal = f (aVal adj) })) (adjs g) }
 
+emapc :: ((v, a, v) -> b) -> Graph v a -> Graph v b
+emapc f g = g { adjs = V.imap (\v -> V.map (bAdj v)) (adjs g) }
+  where
+    bAdj v adj = adj { aVal = f (verts g ! v, (aVal adj), verts g ! (aTo adj)) }
+
 zip :: Graph a e -> Graph b f -> Graph (a, b) (e, f)
 zip g1 g2 = Graph
     { verts = V.zip (verts g1) (verts g2)
