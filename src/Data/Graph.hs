@@ -197,5 +197,19 @@ transformu isStart f defaultVal g = g { verts = vs }
         flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
         return vsV
 
--- transformd :: (a -> Bool) -> ([(b, e)] -> a -> b) -> (a -> b) -> Graph a e -> Graph b e
--- transformd = undefined
+transformd :: (a -> Bool) -> ([(b, e)] -> a -> b) -> (a -> b) -> Graph a e -> Graph b e
+transformd isStart f defaultVal g = g { verts = vs }
+  where
+    n = numVertices g
+    g' = transpose g
+    startNodes = V.toList. V.map fst . V.filter (isStart . snd) . V.imap (,) . verts $ g
+    (ordToV, vToOrd, pred) = bfs_ startNodes g
+    vs = V.create $ do
+        vsV <- VM.new n
+        V.forM_ ordToV $ \v -> do
+            let aParents = V.toList . V.filter (\adj -> (pred ! v) == (aTo adj)) $ (adjs g' ! v)
+            bVals <- mapM (VM.read vsV . aTo) aParents
+            let bParents = L.zip bVals (L.map aVal aParents)
+            VM.write vsV v (f bParents (verts g ! v))
+        flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
+        return vsV
