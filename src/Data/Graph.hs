@@ -19,33 +19,33 @@ newtype Vertex s = Vertex { unvertex :: Int }
 
 type Node = Int
 
-data Edge b = Edge
+data Edge e = Edge
     { eTo :: Node
     , eFrom :: Node
-    , eVal :: b
+    , eVal :: e
     }
 
-eAdj_ :: Edge b -> Adj b
+eAdj_ :: Edge e -> Adj e
 eAdj_ e = Adj
     { aTo = eTo e
     , aVal = eVal e
     }
 
-data Adj b = Adj
+data Adj e = Adj
     { aTo :: Node
-    , aVal :: b
+    , aVal :: e
     }
 
-data Graph a b = Graph
-    { verts :: V.Vector a
-    , adjs :: V.Vector (V.Vector (Adj b))
+data Graph e v = Graph
+    { verts :: V.Vector v
+    , adjs :: V.Vector (V.Vector (Adj e))
     }
 
 -- build :: (Vertex -> a) -> [Edge b]
 -- build :: [(a, [(b, Offset)])]
 -- build :: [a] -> [Edge b]
 
-buildFromList_ :: [a] -> [Edge b] -> Graph a b
+buildFromList_ :: [v] -> [Edge e] -> Graph e v
 buildFromList_ vs es = Graph
     { verts = vs' 
     , adjs = V.map V.fromList es'
@@ -59,16 +59,16 @@ buildFromList_ vs es = Graph
             VM.modify esL ((eAdj_ e):) (eFrom e)
         return esL
 
-data GraphBuilderState s a b = GraphBuilderState
+data GraphBuilderState s e v = GraphBuilderState
     { gbsCount :: Int
-    , gbsVerts :: [a]
-    , gbsEdges :: [Edge b]
+    , gbsVerts :: [v]
+    , gbsEdges :: [Edge e]
     }
 
-newtype GraphBuilder s a b t = GraphBuilder (State (GraphBuilderState s a b) t)
+newtype GraphBuilder s e v t = GraphBuilder (State (GraphBuilderState s e v) t)
     deriving (Functor, Applicative, Monad)
 
-build :: (forall s. GraphBuilder s a b t) -> Graph a b
+build :: (forall s. GraphBuilder s e v t) -> Graph e v
 build (GraphBuilder builder) =
     buildFromList_ (reverse . gbsVerts $ state) (gbsEdges state)
   where
@@ -78,7 +78,7 @@ build (GraphBuilder builder) =
         , gbsEdges = []
         }
 
-vertex :: a -> GraphBuilder s a b (Vertex s)
+vertex :: v -> GraphBuilder s e v (Vertex s)
 vertex v = GraphBuilder $ do
     state <- State.get
     State.put $ state
@@ -87,7 +87,7 @@ vertex v = GraphBuilder $ do
         }
     pure (Vertex (gbsCount state))
 
-edge :: Vertex s -> Vertex s -> b -> GraphBuilder s a b ()
+edge :: Vertex s -> Vertex s -> e -> GraphBuilder s e v ()
 edge (Vertex v) (Vertex u) l = GraphBuilder $ do
     state <- State.get
     State.put $ state
@@ -100,29 +100,29 @@ edge (Vertex v) (Vertex u) l = GraphBuilder $ do
         , eVal = l
         }
 
-numVertices :: Graph a b -> Int
+numVertices :: Graph e v -> Int
 numVertices = V.length . verts
 
-vertices :: Graph a b -> [a]
+vertices :: Graph e v -> [v]
 vertices = V.toList . verts
 
-edges :: Graph a b -> [(a, b, a)]
+edges :: Graph e v -> [(v, e, v)]
 edges g = V.toList . V.concat . V.toList . V.imap toTuples . adjs $ g
   where
     toTuples i = V.map (\adj -> ((verts g) ! i, aVal adj, (verts g) ! (aTo adj)))
 
-vmap :: (a -> b) -> Graph a e -> Graph b e
+vmap :: (v1 -> v2) -> Graph e v1 -> Graph e v2
 vmap f g = g { verts = V.map f (verts g) }
 
-emap :: (a -> b) -> Graph v a -> Graph v b
+emap :: (e1 -> e2) -> Graph e1 v -> Graph e2 v
 emap f g = g { adjs = V.map (V.map (\adj -> adj { aVal = f (aVal adj) })) (adjs g) }
 
-emapc :: (v -> a -> v -> b) -> Graph v a -> Graph v b
+emapc :: (v -> e1 -> v -> e2) -> Graph e1 v -> Graph e2 v
 emapc f g = g { adjs = V.imap (\v -> V.map (bAdj v)) (adjs g) }
   where
     bAdj v adj = adj { aVal = f (verts g ! v) (aVal adj) (verts g ! (aTo adj)) }
 
-zip :: Graph a e -> Graph b f -> Graph (a, b) (e, f)
+zip :: Graph e1 v1 -> Graph e2 v2 -> Graph (e1, e2) (v1, v2)
 zip g1 g2 = Graph
     { verts = V.zip (verts g1) (verts g2)
     , adjs = V.zipWith zipAdjs (adjs g1) (adjs g2)
@@ -130,10 +130,10 @@ zip g1 g2 = Graph
   where
     zipAdjs = V.zipWith (\adj1 adj2 -> adj1 { aVal = (aVal adj1, aVal adj2) })
 
-succs :: Graph a b -> Graph [(b, a)] b
+succs :: Graph e v -> Graph e [(e, v)]
 succs g = g { verts = V.map (V.toList . V.map (\adj -> (aVal adj, verts g ! (aTo adj)))) (adjs g) }
 
-transpose :: Graph a b -> Graph a b
+transpose :: Graph e v -> Graph e v
 transpose g = g { adjs =  V.map V.fromList revAdjs }
   where
     revAdjs = V.create $ do
@@ -143,15 +143,15 @@ transpose g = g { adjs =  V.map V.fromList revAdjs }
                 VM.modify adjL ((adj {aTo = i}):) (aTo adj)
         return adjL
 
-preds :: Graph a b -> Graph [(a, b)] b
+preds :: Graph e v -> Graph e [(v, e)]
 preds g = g { verts = V.map (V.toList . V.map adjToPred) . adjs . transpose $ g }
   where
     adjToPred adj = (verts g ! (aTo adj), aVal adj)
 
-degree :: Graph a b -> Graph Int b
+degree :: Graph e v -> Graph e Int
 degree = vmap length . succs
 
-bfs_ :: [Node] -> Graph a b -> (V.Vector Node, V.Vector Int, V.Vector Node)
+bfs_ :: [Node] -> Graph e v -> (V.Vector Node, V.Vector Int, V.Vector Node)
 bfs_ vs g = runST $ do
     q <- QM.new
     ordToV <- QM.new
@@ -186,7 +186,7 @@ bfs_ vs g = runST $ do
                         VM.write inQ (aTo adjU) True
                 loop q ordToV vToOrd pred curOrd inQ
 
-transformu :: (a -> Bool) -> (a -> [(e, b)] -> b) -> (a -> b) -> Graph a e -> Graph b e
+transformu :: (v1 -> Bool) -> (v1 -> [(e, v2)] -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
 transformu isStart f defaultVal g = g { verts = vs }
   where
     n = numVertices g
@@ -202,7 +202,7 @@ transformu isStart f defaultVal g = g { verts = vs }
         flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
         return vsV
 
-transformd :: (a -> Bool) -> ([(b, e)] -> a -> b) -> (a -> b) -> Graph a e -> Graph b e
+transformd :: (v1 -> Bool) -> ([(v2, e)] -> v1 -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
 transformd isStart f defaultVal g = g { verts = vs }
   where
     n = numVertices g
