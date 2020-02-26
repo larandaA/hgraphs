@@ -142,21 +142,9 @@ preds :: Graph a b -> Graph [(a, b)] b
 preds g = g { verts = V.map (V.toList . V.map adjToPred) . adjs . transpose $ g }
   where
     adjToPred adj = (verts g ! (aTo adj), aVal adj)
--- preds g = g { verts = vs }
---   where
---     vs = V.create $ do
---         vsL <- VM.replicate (numVertices g) []
---         flip V.imapM_ (adjs g) $ \i vAdjs -> do
---             V.forM_ vAdjs $ \adj -> do
---                 VM.modify vsL ((verts g ! i, aVal adj):) (aTo adj)
---         return vsL
 
 degree :: Graph a b -> Graph Int b
 degree = vmap length . succs
--- degree g = Graph
---     { verts = V.imap (\i val -> (val, V.length ((adjs g) ! i))) (verts g)
---     , adjs = adjs g
---     }
 
 bfs_ :: [Node] -> Graph a b -> (V.Vector Node, V.Vector Int, V.Vector Node)
 bfs_ vs g = runST $ do

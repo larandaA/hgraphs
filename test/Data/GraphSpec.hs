@@ -394,9 +394,9 @@ transposeSpec = describe "transpose" $ do
 transformuSpec :: Spec
 transformuSpec = describe "transformu" $ do
 
-    it "should create empty graph" $ do
+    it "should transform an empty graph to an empty graph" $ do
 
-        let g = G.transformu (\_ -> True) (\_ _ -> ()) (\_ -> ()) (G.build (pure ()))
+        let g = G.transformu (const True) (\_ _ -> ()) (const ()) (G.build (pure ()))
 
         length (G.vertices g) `shouldBe` 0
         length (G.edges g) `shouldBe` 0
@@ -409,7 +409,7 @@ transformuSpec = describe "transformu" $ do
             G.vertex "w";
             pure ()
         }
-        let g' = G.transformu (\_ -> False) (\_ _ -> 0) (\_ -> 1) g
+        let g' = G.transformu (const False) (\_ _ -> 0) (const 1) g
 
         G.vertices g' `shouldMatchList` [1, 1, 1]
         length (G.edges g) `shouldBe` 0
@@ -422,7 +422,7 @@ transformuSpec = describe "transformu" $ do
             G.vertex "w";
             pure ()
         }
-        let g' = G.transformu (\_ -> True) (\_ _ -> 0) (\_ -> 1) g
+        let g' = G.transformu (const True) (\_ _ -> 0) (const 1) g
 
         G.vertices g' `shouldMatchList` [0, 0, 0]
         length (G.edges g) `shouldBe` 0
@@ -435,7 +435,7 @@ transformuSpec = describe "transformu" $ do
             w <- G.vertex "w";
             G.edge v w "vw"
         }
-        let g' = G.transformu (\x -> x == "v") (\_ _ -> 0) (\_ -> 1) g
+        let g' = G.transformu (== "v") (\_ _ -> 0) (const 1) g
 
         G.vertices (G.zip g g') `shouldMatchList` [("v", 0), ("u", 1), ("w", 0)]
         G.edges (G.zip g g') `shouldBe` [(("v", 0), ("vw", "vw"), ("w", 0))]
@@ -457,9 +457,9 @@ transformuSpec = describe "transformu" $ do
             G.edge t u "tu";
             G.edge t k "tk"
         }
-        let isStart = (\x -> (x == "v") || (x == "u"))
-        let h = (\_ succs -> if succs == [] then 1 else (+ 1) . L.sum . L.map snd $ succs)
-        let g' = G.transformu isStart h (\_ -> 0) g
+        let isStart = (`elem` ["v", "u"])
+        let h = (\_ -> (+ 1) . L.sum . L.map snd)
+        let g' = G.transformu isStart h (const 0) g
 
         G.vertices (G.zip g g') `shouldMatchList` [("v", 3), ("u", 3), ("w", 2), ("r", 1), ("t", 2), ("k", 1)]
 
