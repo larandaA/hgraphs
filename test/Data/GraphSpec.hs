@@ -205,7 +205,7 @@ emapcSpec = describe "emapc" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = G.emapc (\(_, e, _) -> e) (G.build (pure ()))
+        let g = G.emapc (\_ e _ -> e) (G.build (pure ()))
 
         length (G.vertices g) `shouldBe` 0
         length (G.edges g) `shouldBe` 0
@@ -221,7 +221,7 @@ emapcSpec = describe "emapc" $ do
             G.edge c a "e2";
             G.edge c b "e3"
         }
-        let g' = G.emapc (\(_, e, _) -> e) g
+        let g' = G.emapc (\_ e _ -> e) g
 
         G.vertices g' `shouldMatchList` ["a", "b", "c"]
         G.edges g' `shouldMatchList` [("b", "e1", "a"), ("c", "e2", "a"), ("c", "e3", "b")]
@@ -241,7 +241,7 @@ emapcSpec = describe "emapc" $ do
             G.edge a c ();
             G.edge b c ()
         }
-        let reverseEdge (v1, _, v2) = v1 > v2
+        let reverseEdge v1 _ v2 = v1 > v2
         let g' = G.emapc reverseEdge g
 
         G.vertices g' `shouldMatchList` ["a", "b", "c"]
