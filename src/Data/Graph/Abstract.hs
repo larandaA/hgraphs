@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Data.Graph where
+module Data.Graph.Abstract where
 
 import Control.Monad
 import Control.Monad.ST
