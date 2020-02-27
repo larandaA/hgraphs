@@ -1,8 +1,8 @@
 import Test.Hspec
 import qualified Data.Queue.MutableSpec as Q
-import qualified Data.GraphSpec as G
+import qualified Data.Graph.AbstractSpec as GA
 
 main :: IO ()
 main = hspec $ do
     Q.spec
-    G.spec
+    GA.spec

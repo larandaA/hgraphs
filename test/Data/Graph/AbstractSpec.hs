@@ -1,4 +1,4 @@
-module Data.GraphSpec (spec) where
+module Data.Graph.AbstractSpec (spec) where
 
 import Control.Monad.ST
 import qualified Data.List as L
@@ -591,7 +591,7 @@ transformdSpec = describe "transformd" $ do
 
 
 spec :: Spec
-spec = describe "Data.GA.aph" $ do
+spec = describe "Data.Graph.Abstract" $ do
     buildSpec
     verticesSpec
     edgesSpec
