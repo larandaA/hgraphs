@@ -41,6 +41,8 @@ data Graph e v = Graph
     , adjs :: V.Vector (V.Vector (Adj e))
     }
 
+type Graph' = Graph ()
+
 -- build :: (Vertex -> a) -> [Edge b]
 -- build :: [(a, [(b, Offset)])]
 -- build :: [a] -> [Edge b]
@@ -218,3 +220,42 @@ transformd isStart f defaultVal g = g { verts = vs }
             VM.write vsV v (f bParents (verts g ! v))
         flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
         return vsV
+
+
+isolated :: [v] -> Graph e v
+isolated vs = Graph { verts = V.fromList vs, adjs = V.empty }
+
+singleton :: v -> Graph e v
+singleton = isolated . pure
+
+path :: [v] -> Graph' v
+path vs = Graph { verts = V.fromList vs, adjs = V.fromList . L.map pathAdjs $ [0.. n - 1] }
+  where
+    n = length vs
+    pathAdjs i = V.fromList (if i == n - 1 then [] else [Adj { aTo = i + 1, aVal = () }])
+
+cycle :: [v] -> Graph' v
+cycle vs = Graph { verts = V.fromList vs, adjs = V.fromList . L.map cycleAdjs $ [0.. n - 1] }
+  where
+    n = length vs
+    cycleAdjs i = V.fromList [Adj { aTo = (i + 1) `mod` n, aVal = () }]
+
+star :: v -> [v] -> Graph' v
+star v vs = Graph { verts = V.fromList (v:vs), adjs = V.fromList . L.map starAdjs $ [0.. n - 1] }
+  where
+    n = length vs
+    starAdjs 0 = V.fromList . L.map (\j -> Adj { aTo = j, aVal = () }) $ [1.. n - 1]
+    starAdjs _ = V.empty
+
+clique :: [v] -> Graph' v
+clique vs = Graph { verts = V.fromList vs, adjs = V.fromList . L.map cliqueAdjs $ [0.. n - 1] }
+  where
+    n = length vs
+    cliqueAdjs i = V.fromList . L.map (\j -> Adj { aTo = j, aVal = () }) $ ([0.. i - 1] ++ [i + 1.. n - 1])
+
+biclique :: [v] -> [v] -> Graph' v
+biclique as bs = Graph { verts = V.fromList (as ++ bs), adjs = (V.replicate na aAdjs) V.++ (V.replicate nb V.empty) }
+  where
+    na = length as
+    nb = length bs
+    aAdjs = V.fromList . L.map (\j -> Adj { aTo = j, aVal = () }) $ [na.. na + nb - 1]
