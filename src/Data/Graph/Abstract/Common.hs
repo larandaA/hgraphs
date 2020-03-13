@@ -3,6 +3,9 @@ module Data.Graph.Abstract.Common where
 import Data.Graph.Abstract
 import qualified Data.List as L
 
+empty :: Graph e v
+empty = build $ pure ()
+
 isolated :: [v] -> Graph e v
 isolated ls = build $ mapM_ vertex ls
 
@@ -10,13 +13,13 @@ singleton :: v -> Graph e v
 singleton l = isolated [l]
 
 path :: [v] -> Graph' v
-path [] = isolated []
+path [] = empty
 path ls = build $ do
     vs <- mapM vertex ls
     mapM (uncurry edge') (L.zip vs (L.tail vs))
 
 cycle :: [v] -> Graph' v
-cycle [] = isolated []
+cycle [] = empty
 cycle [l] = singleton l
 cycle (l:ls) = build $ do
     v <- vertex l

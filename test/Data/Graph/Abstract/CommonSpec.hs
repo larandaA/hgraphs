@@ -5,6 +5,16 @@ import qualified Data.Graph.Abstract.Common as GAC
 import Test.Hspec
 
 
+emptySpec :: Spec
+emptySpec = describe "empty" $ do
+
+    it "should create a graph with 0 vertices" $ do
+
+        let g = GAC.empty
+
+        length (GA.vertices g) `shouldBe` 0
+        length (GA.edges g) `shouldBe` 0
+
 isolatedSpec :: Spec
 isolatedSpec = describe "isolated" $ do
 
@@ -208,6 +218,7 @@ starSpec = describe "star" $ do
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Common" $ do
+    emptySpec
     isolatedSpec
     singletonSpec
     pathSpec
