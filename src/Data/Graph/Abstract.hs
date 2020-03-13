@@ -89,8 +89,8 @@ vertex v = GraphBuilder $ do
         }
     pure (Vertex (gbsCount state))
 
-edge :: Vertex s -> Vertex s -> e -> GraphBuilder s e v ()
-edge (Vertex v) (Vertex u) l = GraphBuilder $ do
+edge :: e -> Vertex s -> Vertex s -> GraphBuilder s e v ()
+edge l (Vertex v) (Vertex u)= GraphBuilder $ do
     state <- State.get
     State.put $ state
         { gbsEdges = edge:(gbsEdges state)
@@ -103,7 +103,7 @@ edge (Vertex v) (Vertex u) l = GraphBuilder $ do
         }
 
 edge' :: Vertex s -> Vertex s -> GraphBuilder s () v ()
-edge' v u = edge v u ()
+edge' = edge ()
 
 numVertices :: Graph e v -> Int
 numVertices = V.length . verts

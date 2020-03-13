@@ -41,7 +41,7 @@ verticesSpec = describe "vertices" $ do
         let g = GA.build $ do {
             a <- GA.vertex "a";
             b <- GA.vertex "b";
-            GA.edge a b ()
+            GA.edge' a b
         }
 
         GA.vertices g `shouldMatchList` ["a", "b"]
@@ -71,9 +71,9 @@ edgesSpec = describe "edges" $ do
             a <- GA.vertex "a";
             b <- GA.vertex "b";
             c <- GA.vertex "c";
-            GA.edge a b ();
-            GA.edge a c ();
-            GA.edge b c ()
+            GA.edge' a b;
+            GA.edge' a c;
+            GA.edge' b c
         }
 
         GA.edges g `shouldMatchList` [("a", (), "b"), ("a", (), "c"), ("b", (), "c")]
@@ -106,9 +106,9 @@ buildSpec = describe "build" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a ();
-            GA.edge c a ();
-            GA.edge c b ()
+            GA.edge' b a;
+            GA.edge' c a;
+            GA.edge' c b
         }
 
         length (GA.vertices g) `shouldBe` 3
@@ -132,9 +132,9 @@ vmapSpec = describe "vmap" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a "e1";
-            GA.edge c a "e2";
-            GA.edge c b "e3"
+            GA.edge "e1" b a;
+            GA.edge "e2" c a;
+            GA.edge "e3" c b
         }
         let g' = GA.vmap id g
 
@@ -148,9 +148,9 @@ vmapSpec = describe "vmap" $ do
             v1 <- GA.vertex 1;
             v2 <- GA.vertex 2;
 
-            GA.edge v1 v0 "e1";
-            GA.edge v2 v0 "e2";
-            GA.edge v2 v1 "e3"
+            GA.edge "e1" v1 v0;
+            GA.edge "e2" v2 v0;
+            GA.edge "e3" v2 v1
         }
         let g' = GA.vmap (+ 1) g
 
@@ -174,9 +174,9 @@ emapSpec = describe "emap" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a "e1";
-            GA.edge c a "e2";
-            GA.edge c b "e3"
+            GA.edge "e1" b a;
+            GA.edge "e2" c a;
+            GA.edge "e3" c b
         }
         let g' = GA.emap id g
 
@@ -191,9 +191,9 @@ emapSpec = describe "emap" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a 0;
-            GA.edge c a 1;
-            GA.edge c b 2
+            GA.edge 0 b a;
+            GA.edge 1 c a;
+            GA.edge 2 c b
         }
         let g' = GA.emap (+ 1) g
 
@@ -217,9 +217,9 @@ emapcSpec = describe "emapc" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a "e1";
-            GA.edge c a "e2";
-            GA.edge c b "e3"
+            GA.edge "e1" b a;
+            GA.edge "e2" c a;
+            GA.edge "e3" c b
         }
         let g' = GA.emapc (\_ e _ -> e) g
 
@@ -234,12 +234,12 @@ emapcSpec = describe "emapc" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a ();
-            GA.edge c a ();
-            GA.edge c b ();
-            GA.edge a b ();
-            GA.edge a c ();
-            GA.edge b c ()
+            GA.edge' b a;
+            GA.edge' c a;
+            GA.edge' c b;
+            GA.edge' a b;
+            GA.edge' a c;
+            GA.edge' b c
         }
         let reverseEdge v1 _ v2 = v1 > v2
         let g' = GA.emapc reverseEdge g
@@ -290,8 +290,8 @@ zipSpec = describe "zip" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge a b "e1";
-            GA.edge b c "e2"
+            GA.edge "e1" a b;
+            GA.edge "e2" b c
 
         }
         let g2 = GA.build $ do {
@@ -299,8 +299,8 @@ zipSpec = describe "zip" $ do
             v1 <- GA.vertex 1;
             v2 <- GA.vertex 2;
 
-            GA.edge v0 v1 "01";
-            GA.edge v1 v2 "12"
+            GA.edge "01" v0 v1;
+            GA.edge "12" v1 v2
         }
         let g = GA.zip g1 g2
 
@@ -339,9 +339,9 @@ succsSpec = describe "succs" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge b a "ba";
-            GA.edge c a "ca";
-            GA.edge c b "cb"
+            GA.edge "ba" b a;
+            GA.edge "ca" c a;
+            GA.edge "cb" c b
         }
         let g' = GA.vmap L.sort (GA.succs g)
 
@@ -385,9 +385,9 @@ predsSpec = describe "preds" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge a b "ab";
-            GA.edge a c "ac";
-            GA.edge b c "bc"
+            GA.edge "ab" a b;
+            GA.edge "ac" a c;
+            GA.edge "bc" b c
         }
         let g' = GA.vmap L.sort (GA.preds g)
 
@@ -432,9 +432,9 @@ transposeSpec = describe "transpose" $ do
             b <- GA.vertex "b";
             c <- GA.vertex "c";
 
-            GA.edge a b "ab";
-            GA.edge a c "ac";
-            GA.edge b c "bc"
+            GA.edge "ab" a b;
+            GA.edge "ac" a c;
+            GA.edge "bc" b c
         }
         let g' = GA.transpose g
 
@@ -487,7 +487,7 @@ transformuSpec = describe "transformu" $ do
             v <- GA.vertex "v";
             u <- GA.vertex "u";
             w <- GA.vertex "w";
-            GA.edge v w "vw"
+            GA.edge "vw" v w
         }
         let g' = GA.transformu (== "v") (\_ _ -> 0) (const 1) g
 
@@ -504,12 +504,12 @@ transformuSpec = describe "transformu" $ do
             r <- GA.vertex "r";
             k <- GA.vertex "k";
 
-            GA.edge v w "vw";
-            GA.edge u t "ut";
-            GA.edge w t "wt";
-            GA.edge w r "wr";
-            GA.edge t u "tu";
-            GA.edge t k "tk"
+            GA.edge "vw" v w;
+            GA.edge "ut" u t;
+            GA.edge "wt" w t;
+            GA.edge "wr" w r;
+            GA.edge "tu" t u;
+            GA.edge "tk" t k
         }
         let isStart = (`elem` ["v", "u"])
         let h = (\_ -> (+ 1) . L.sum . L.map snd)
@@ -559,7 +559,7 @@ transformdSpec = describe "transformd" $ do
             v <- GA.vertex "v";
             u <- GA.vertex "u";
             w <- GA.vertex "w";
-            GA.edge v w "vw"
+            GA.edge "vw" v w
         }
         let g' = GA.transformd (== "v") (\_ _ -> 0) (const 1) g
 
@@ -576,12 +576,12 @@ transformdSpec = describe "transformd" $ do
             r <- GA.vertex "r";
             k <- GA.vertex "k";
 
-            GA.edge v w "vw";
-            GA.edge u t "ut";
-            GA.edge w t "wt";
-            GA.edge w r "wr";
-            GA.edge t u "tu";
-            GA.edge t k "tk"
+            GA.edge "vw" v w;
+            GA.edge "ut" u t;
+            GA.edge "wt" w t;
+            GA.edge "wr" w r;
+            GA.edge "tu" t u;
+            GA.edge "tk" t k
         }
         let isStart = (`elem` ["v", "u"])
         let d = (\preds _ -> (+ 1) . L.sum . L.map fst $ preds)
