@@ -102,6 +102,9 @@ edge (Vertex v) (Vertex u) l = GraphBuilder $ do
         , eVal = l
         }
 
+edge' :: Vertex s -> Vertex s -> GraphBuilder s () v ()
+edge' v u = edge v u ()
+
 numVertices :: Graph e v -> Int
 numVertices = V.length . verts
 
@@ -223,39 +226,36 @@ transformd isStart f defaultVal g = g { verts = vs }
 
 
 isolated :: [v] -> Graph e v
-isolated vs = Graph { verts = V.fromList vs, adjs = V.empty }
+isolated ls = build $ mapM_ vertex ls
 
 singleton :: v -> Graph e v
-singleton = isolated . pure
+singleton l = isolated [l]
 
 path :: [v] -> Graph' v
-path vs = Graph { verts = V.fromList vs, adjs = V.fromList . L.map pathAdjs $ [0.. n - 1] }
-  where
-    n = length vs
-    pathAdjs i = V.fromList (if i == n - 1 then [] else [Adj { aTo = i + 1, aVal = () }])
+path [] = isolated []
+path ls = build $ do
+    vs <- mapM vertex ls
+    mapM (uncurry edge') (L.zip vs (L.tail vs))
 
 cycle :: [v] -> Graph' v
-cycle vs = Graph { verts = V.fromList vs, adjs = V.fromList . L.map cycleAdjs $ [0.. n - 1] }
-  where
-    n = length vs
-    cycleAdjs i = V.fromList [Adj { aTo = (i + 1) `mod` n, aVal = () }]
-
-star :: v -> [v] -> Graph' v
-star v vs = Graph { verts = V.fromList (v:vs), adjs = V.fromList . L.map starAdjs $ [0.. n - 1] }
-  where
-    n = length vs
-    starAdjs 0 = V.fromList . L.map (\j -> Adj { aTo = j, aVal = () }) $ [1.. n - 1]
-    starAdjs _ = V.empty
+cycle [] = isolated []
+cycle [l] = singleton l
+cycle (l:ls) = build $ do
+    v <- vertex l
+    vs <- mapM vertex ls
+    mapM (uncurry edge') (L.zip ([v] ++ vs) (vs ++ [v]))
 
 clique :: [v] -> Graph' v
-clique vs = Graph { verts = V.fromList vs, adjs = V.fromList . L.map cliqueAdjs $ [0.. n - 1] }
-  where
-    n = length vs
-    cliqueAdjs i = V.fromList . L.map (\j -> Adj { aTo = j, aVal = () }) $ ([0.. i - 1] ++ [i + 1.. n - 1])
+clique ls = build $ do
+    vs <- mapM vertex ls
+    let ivs = L.zip [1..] vs
+    sequence_ [edge' av bv | (i, av) <- ivs, (j, bv) <- ivs, i /= j]
 
 biclique :: [v] -> [v] -> Graph' v
-biclique as bs = Graph { verts = V.fromList (as ++ bs), adjs = (V.replicate na aAdjs) V.++ (V.replicate nb V.empty) }
-  where
-    na = length as
-    nb = length bs
-    aAdjs = V.fromList . L.map (\j -> Adj { aTo = j, aVal = () }) $ [na.. na + nb - 1]
+biclique als bls = build $ do
+    avs <- mapM vertex als
+    bvs <- mapM vertex bls
+    sequence_ [edge' av bv | av <- avs, bv <- bvs]
+
+star :: v -> [v] -> Graph' v
+star l = biclique [l]
