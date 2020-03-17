@@ -225,7 +225,16 @@ transformd isStart f defaultVal g = g { verts = vs }
         return vsV
 
 flatten :: Graph e (Graph e v) -> Graph e v
-flatten g = undefined
+flatten g = build $ do
+    vs <- traverse (traverse vertex) . V.map verts . verts $ g
+    V.forM_ (V.zip vs (V.map adjs (verts g))) $ \(vsG, adjsG) -> do
+        flip V.imapM_ adjsG $ \i adjsV -> do
+            let v = vsG ! i
+            sequence_ [edge (aVal adj) v (vsG ! aTo adj) | adj <- V.toList adjsV]
+    flip V.imapM_ (adjs g) $ \i adjsV -> do
+        V.forM_ adjsV $ \adjV -> do
+            sequence_ [edge (aVal adjV) v u | v <- V.toList (vs ! i), u <- V.toList (vs ! aTo adjV)]
+
 
 instance Functor (Graph e) where
     
