@@ -223,3 +223,25 @@ transformd isStart f defaultVal g = g { verts = vs }
             VM.write vsV v (f bParents (verts g ! v))
         flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
         return vsV
+
+flatten :: Graph e (Graph e v) -> Graph e v
+flatten g = undefined
+
+instance Functor (Graph e) where
+    
+    fmap = vmap
+
+instance Applicative (Graph e) where
+
+    pure v = build $ do
+        vertex v
+        pure ()
+
+    gf <*> gx = do
+        f <- gf
+        x <- gx
+        pure (f x)
+
+instance Monad (Graph e) where
+    
+    gx >>= f = flatten (f <$> gx)
