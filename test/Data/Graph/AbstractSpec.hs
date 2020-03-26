@@ -784,6 +784,21 @@ flattenSpec = describe "flatten" $ do
             , (2, 21, 1), (3, 33, 3), (5, 54, 4), (5, 56, 6)
             ]
 
+foldrSpec :: Spec
+foldrSpec = describe "foldr" $ do
+
+    it "should return a default value on an empty graph" $ do
+
+        let g = GAC.empty
+
+        foldr (+) 42 g `shouldBe` 42
+
+    it "should return a number of vertices with sum function" $ do
+
+        let g = GAC.isolated [1, 1, 1, 1, 1]
+
+        foldr (+) 0 g `shouldBe` 5
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract" $ do
@@ -800,3 +815,4 @@ spec = describe "Data.Graph.Abstract" $ do
     transformuSpec
     transformdSpec
     flattenSpec
+    foldrSpec

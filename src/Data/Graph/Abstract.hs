@@ -254,3 +254,7 @@ instance Applicative (Graph e) where
 instance Monad (Graph e) where
     
     gx >>= f = flatten (f <$> gx)
+
+instance Foldable (Graph e) where
+
+    foldr f z = L.foldr f z . vertices
