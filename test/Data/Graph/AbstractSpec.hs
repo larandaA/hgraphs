@@ -2,6 +2,7 @@ module Data.Graph.AbstractSpec (spec) where
 
 import Control.Monad.ST
 import qualified Data.List as L
+import qualified Data.Maybe as M
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Common as GAC
 import Test.Hspec
@@ -799,6 +800,30 @@ foldrSpec = describe "foldr" $ do
 
         foldr (+) 0 g `shouldBe` 5
 
+traverseSpec :: Spec
+traverseSpec = describe "traverse" $ do
+
+    it "should return a pure graph if traversed with pure function" $ do
+
+        let g = GAC.isolated [1, 2, 3]
+        let mg = traverse pure g
+
+        M.isJust mg `shouldBe` True
+        
+        let (Just g') = mg
+
+        GA.vertices g' `shouldMatchList` [1, 2, 3]
+        length (GA.edges g') `shouldBe` 0
+
+    it "should return nothing if one of the vertices is mapped to nothing" $ do
+
+        let g = GAC.isolated [1, 2, 3]
+
+        let f 2 = Nothing
+            f _ = Just ()
+        
+        M.isNothing (traverse f g) `shouldBe` True
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract" $ do
@@ -816,3 +841,4 @@ spec = describe "Data.Graph.Abstract" $ do
     transformdSpec
     flattenSpec
     foldrSpec
+    traverseSpec

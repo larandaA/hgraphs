@@ -258,3 +258,7 @@ instance Monad (Graph e) where
 instance Foldable (Graph e) where
 
     foldr f z = L.foldr f z . vertices
+
+instance Traversable (Graph e) where
+
+    traverse f g = (\verts' -> g { verts = verts' }) <$> traverse f (verts g)
