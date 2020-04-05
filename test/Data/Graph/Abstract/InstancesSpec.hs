@@ -7,6 +7,48 @@ import Data.Graph.Abstract.Instances
 import Test.Hspec
 
 
+fmapSpec :: Spec
+fmapSpec = describe "fmap" $ do
+
+    it "should preserve empty graph" $ do
+
+        let g = fmap (+ 1) GAC.empty
+
+        length (GA.vertices g) `shouldBe` 0
+        length (GA.edges g) `shouldBe` 0
+
+    it "should not change graph with id function" $ do
+
+        let g = GA.build $ do {
+            a <- GA.vertex "a";
+            b <- GA.vertex "b";
+            c <- GA.vertex "c";
+
+            GA.edge "e1" b a;
+            GA.edge "e2" c a;
+            GA.edge "e3" c b
+        }
+        let g' = fmap id g
+
+        GA.vertices g' `shouldMatchList` ["a", "b", "c"]
+        GA.edges g' `shouldMatchList` [("b", "e1", "a"), ("c", "e2", "a"), ("c", "e3", "b")]
+
+    it "should not change graph structure" $ do
+
+        let g = GA.build $ do {
+            v0 <- GA.vertex 0;
+            v1 <- GA.vertex 1;
+            v2 <- GA.vertex 2;
+
+            GA.edge "e1" v1 v0;
+            GA.edge "e2" v2 v0;
+            GA.edge "e3" v2 v1
+        }
+        let g' = fmap (+ 1) g
+
+        GA.vertices g' `shouldMatchList` [1, 2, 3]
+        GA.edges g' `shouldMatchList` [(2, "e1", 1), (3, "e2", 1), (3, "e3", 2)]
+
 foldrSpec :: Spec
 foldrSpec = describe "foldr" $ do
 
@@ -49,5 +91,6 @@ traverseSpec = describe "traverse" $ do
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Instances" $ do
+    fmapSpec
     foldrSpec
     traverseSpec
