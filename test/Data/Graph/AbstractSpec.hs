@@ -2,6 +2,7 @@ module Data.Graph.AbstractSpec (spec) where
 
 import qualified Data.List as L
 import qualified Data.Graph.Abstract as GA
+import qualified Data.Graph.Abstract.Builder as GAB
 import qualified Data.Graph.Abstract.Common as GAC
 import Test.Hspec
 
@@ -11,15 +12,15 @@ verticesSpec = describe "vertices" $ do
 
     it "should be empty for empty graph" $ do
 
-        let g = GA.build (pure ())
+        let g = GAB.build (pure ())
 
         GA.vertices g `shouldBe` ([] :: [()])
 
     it "should return all vertices for graph without edges" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "a";
-            GA.vertex "b";
+        let g = GAB.build $ do {
+            GAB.vertex "a";
+            GAB.vertex "b";
             pure ()
         }
 
@@ -27,10 +28,10 @@ verticesSpec = describe "vertices" $ do
 
     it "should return vertices with repeated labels" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "a";
-            GA.vertex "b";
-            GA.vertex "a";
+        let g = GAB.build $ do {
+            GAB.vertex "a";
+            GAB.vertex "b";
+            GAB.vertex "a";
             pure ()
         }
 
@@ -38,10 +39,10 @@ verticesSpec = describe "vertices" $ do
 
     it "should return all vertices for graph with edges" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            GA.edge' a b
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            GAB.edge' a b
         }
 
         GA.vertices g `shouldMatchList` ["a", "b"]
@@ -51,15 +52,15 @@ edgesSpec = describe "edges" $ do
 
     it "should be empty for empty graph" $ do
 
-        let g = GA.build (pure ())
+        let g = GAB.build (pure ())
 
         GA.edges g `shouldBe` ([] :: [((), (), ())])
 
     it "should be empty for graph without edges" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "a";
-            GA.vertex "b";
+        let g = GAB.build $ do {
+            GAB.vertex "a";
+            GAB.vertex "b";
             pure ()
         }
 
@@ -67,74 +68,37 @@ edgesSpec = describe "edges" $ do
 
     it "should return all edges for graph with edges" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
-            GA.edge' a b;
-            GA.edge' a c;
-            GA.edge' b c
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            GAB.edge' a b;
+            GAB.edge' a c;
+            GAB.edge' b c
         }
 
         GA.edges g `shouldMatchList` [("a", (), "b"), ("a", (), "c"), ("b", (), "c")]
-
-buildSpec :: Spec
-buildSpec = describe "build" $ do
-
-    it "should create empty graph" $ do
-
-        let g = GA.build (pure ())
-
-        length (GA.vertices g) `shouldBe` 0
-        length (GA.edges g) `shouldBe` 0
-
-    it "should create graph with all verteces isolated" $ do
-
-        let g = GA.build $ do {
-            GA.vertex ();
-            GA.vertex ();
-            pure ()
-        }
-
-        length (GA.vertices g) `shouldBe` 2
-        length (GA.edges g) `shouldBe` 0
-
-    it "should create graph with different vertex degrees" $ do
-
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
-
-            GA.edge' b a;
-            GA.edge' c a;
-            GA.edge' c b
-        }
-
-        length (GA.vertices g) `shouldBe` 3
-        length (GA.edges g) `shouldBe` 3
-        GA.vertices (GA.zip g (GA.degree g)) `shouldMatchList` [("a", 0), ("b", 1), ("c", 2)]
 
 vmapSpec :: Spec
 vmapSpec = describe "vmap" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = GA.vmap (+ 1) (GA.build (pure ()))
+        let g = GA.vmap (+ 1) (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should not change graph with id function" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "e1" b a;
-            GA.edge "e2" c a;
-            GA.edge "e3" c b
+            GAB.edge "e1" b a;
+            GAB.edge "e2" c a;
+            GAB.edge "e3" c b
         }
         let g' = GA.vmap id g
 
@@ -143,14 +107,14 @@ vmapSpec = describe "vmap" $ do
 
     it "should not change graph structure" $ do
 
-        let g = GA.build $ do {
-            v0 <- GA.vertex 0;
-            v1 <- GA.vertex 1;
-            v2 <- GA.vertex 2;
+        let g = GAB.build $ do {
+            v0 <- GAB.vertex 0;
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
 
-            GA.edge "e1" v1 v0;
-            GA.edge "e2" v2 v0;
-            GA.edge "e3" v2 v1
+            GAB.edge "e1" v1 v0;
+            GAB.edge "e2" v2 v0;
+            GAB.edge "e3" v2 v1
         }
         let g' = GA.vmap (+ 1) g
 
@@ -162,21 +126,21 @@ emapSpec = describe "emap" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = GA.emap (+ 1) (GA.build (pure ()))
+        let g = GA.emap (+ 1) (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should not change graph with id function" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "e1" b a;
-            GA.edge "e2" c a;
-            GA.edge "e3" c b
+            GAB.edge "e1" b a;
+            GAB.edge "e2" c a;
+            GAB.edge "e3" c b
         }
         let g' = GA.emap id g
 
@@ -186,14 +150,14 @@ emapSpec = describe "emap" $ do
 
     it "should not change graph structure" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge 0 b a;
-            GA.edge 1 c a;
-            GA.edge 2 c b
+            GAB.edge 0 b a;
+            GAB.edge 1 c a;
+            GAB.edge 2 c b
         }
         let g' = GA.emap (+ 1) g
 
@@ -205,21 +169,21 @@ emapcSpec = describe "emapc" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = GA.emapc (\_ e _ -> e) (GA.build (pure ()))
+        let g = GA.emapc (\_ e _ -> e) (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should not change graph with id function" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "e1" b a;
-            GA.edge "e2" c a;
-            GA.edge "e3" c b
+            GAB.edge "e1" b a;
+            GAB.edge "e2" c a;
+            GAB.edge "e3" c b
         }
         let g' = GA.emapc (\_ e _ -> e) g
 
@@ -229,17 +193,17 @@ emapcSpec = describe "emapc" $ do
 
     it "should not change graph structure" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge' b a;
-            GA.edge' c a;
-            GA.edge' c b;
-            GA.edge' a b;
-            GA.edge' a c;
-            GA.edge' b c
+            GAB.edge' b a;
+            GAB.edge' c a;
+            GAB.edge' c b;
+            GAB.edge' a b;
+            GAB.edge' a c;
+            GAB.edge' b c
         }
         let reverseEdge v1 _ v2 = v1 > v2
         let g' = GA.emapc reverseEdge g
@@ -259,8 +223,8 @@ zipSpec = describe "zip" $ do
 
     it "should result in empty graph" $ do
 
-        let g1 = GA.build (pure ())
-        let g2 = GA.build (pure ())
+        let g1 = GAB.build (pure ())
+        let g2 = GAB.build (pure ())
         let g = GA.zip g1 g2
 
         length (GA.vertices g) `shouldBe` 0
@@ -268,14 +232,14 @@ zipSpec = describe "zip" $ do
 
     it "should zip graphs without edges" $ do
 
-        let g1 = GA.build $ do {
-            GA.vertex "a";
-            GA.vertex "b";
+        let g1 = GAB.build $ do {
+            GAB.vertex "a";
+            GAB.vertex "b";
             pure ()
         }
-        let g2 = GA.build $ do {
-            GA.vertex 1;
-            GA.vertex 2;
+        let g2 = GAB.build $ do {
+            GAB.vertex 1;
+            GAB.vertex 2;
             pure ()
         }
         let g = GA.zip g1 g2
@@ -285,22 +249,22 @@ zipSpec = describe "zip" $ do
 
     it "should zip graphs with edges" $ do
 
-        let g1 = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g1 = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "e1" a b;
-            GA.edge "e2" b c
+            GAB.edge "e1" a b;
+            GAB.edge "e2" b c
 
         }
-        let g2 = GA.build $ do {
-            v0 <- GA.vertex 0;
-            v1 <- GA.vertex 1;
-            v2 <- GA.vertex 2;
+        let g2 = GAB.build $ do {
+            v0 <- GAB.vertex 0;
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
 
-            GA.edge "01" v0 v1;
-            GA.edge "12" v1 v2
+            GAB.edge "01" v0 v1;
+            GAB.edge "12" v1 v2
         }
         let g = GA.zip g1 g2
 
@@ -315,16 +279,16 @@ succsSpec = describe "succs" $ do
 
     it "should create empty graph" $ do
 
-        let g = GA.succs (GA.build (pure ()))
+        let g = GA.succs (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should be empty for isolated vertices" $ do
 
-        let g = GA.build $ do {
-            GA.vertex ();
-            GA.vertex ();
+        let g = GAB.build $ do {
+            GAB.vertex ();
+            GAB.vertex ();
             pure ()
         }
         let g' = GA.succs g
@@ -334,14 +298,14 @@ succsSpec = describe "succs" $ do
 
     it "should preserve graph structure" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "ba" b a;
-            GA.edge "ca" c a;
-            GA.edge "cb" c b
+            GAB.edge "ba" b a;
+            GAB.edge "ca" c a;
+            GAB.edge "cb" c b
         }
         let g' = GA.vmap L.sort (GA.succs g)
 
@@ -361,16 +325,16 @@ predsSpec = describe "preds" $ do
 
     it "should create empty graph" $ do
 
-        let g = GA.preds (GA.build (pure ()))
+        let g = GA.preds (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should be empty for isolated vertices" $ do
 
-        let g = GA.build $ do {
-            GA.vertex ();
-            GA.vertex ();
+        let g = GAB.build $ do {
+            GAB.vertex ();
+            GAB.vertex ();
             pure ()
         }
         let g' = GA.preds g
@@ -380,14 +344,14 @@ predsSpec = describe "preds" $ do
 
     it "should preserve graph structure" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "ab" a b;
-            GA.edge "ac" a c;
-            GA.edge "bc" b c
+            GAB.edge "ab" a b;
+            GAB.edge "ac" a c;
+            GAB.edge "bc" b c
         }
         let g' = GA.vmap L.sort (GA.preds g)
 
@@ -407,17 +371,17 @@ transposeSpec = describe "transpose" $ do
 
     it "should create empty graph" $ do
 
-        let g = GA.transpose (GA.build (pure ()))
+        let g = GA.transpose (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should not change graph without edges" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "v";
-            GA.vertex "u";
-            GA.vertex "w";
+        let g = GAB.build $ do {
+            GAB.vertex "v";
+            GAB.vertex "u";
+            GAB.vertex "w";
             pure ()
         }
         let g' = GA.transpose g
@@ -427,14 +391,14 @@ transposeSpec = describe "transpose" $ do
 
     it "should reverse edges" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "ab" a b;
-            GA.edge "ac" a c;
-            GA.edge "bc" b c
+            GAB.edge "ab" a b;
+            GAB.edge "ac" a c;
+            GAB.edge "bc" b c
         }
         let g' = GA.transpose g
 
@@ -450,17 +414,17 @@ transformuSpec = describe "transformu" $ do
 
     it "should transform an empty graph to an empty graph" $ do
 
-        let g = GA.transformu (const True) (\_ _ -> ()) (const ()) (GA.build (pure ()))
+        let g = GA.transformu (const True) (\_ _ -> ()) (const ()) (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should transform all vertices to default values" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "v";
-            GA.vertex "u";
-            GA.vertex "w";
+        let g = GAB.build $ do {
+            GAB.vertex "v";
+            GAB.vertex "u";
+            GAB.vertex "w";
             pure ()
         }
         let g' = GA.transformu (const False) (\_ _ -> 0) (const 1) g
@@ -470,10 +434,10 @@ transformuSpec = describe "transformu" $ do
 
     it "should transform all vertices to non-default values" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "v";
-            GA.vertex "u";
-            GA.vertex "w";
+        let g = GAB.build $ do {
+            GAB.vertex "v";
+            GAB.vertex "u";
+            GAB.vertex "w";
             pure ()
         }
         let g' = GA.transformu (const True) (\_ _ -> 0) (const 1) g
@@ -483,11 +447,11 @@ transformuSpec = describe "transformu" $ do
 
     it "should transform all vertices from a component to non-default values" $ do
 
-        let g = GA.build $ do {
-            v <- GA.vertex "v";
-            u <- GA.vertex "u";
-            w <- GA.vertex "w";
-            GA.edge "vw" v w
+        let g = GAB.build $ do {
+            v <- GAB.vertex "v";
+            u <- GAB.vertex "u";
+            w <- GAB.vertex "w";
+            GAB.edge "vw" v w
         }
         let g' = GA.transformu (== "v") (\_ _ -> 0) (const 1) g
 
@@ -496,20 +460,20 @@ transformuSpec = describe "transformu" $ do
 
     it "should transform all vertices to number of all processed successors" $ do
 
-        let g = GA.build $ do {
-            v <- GA.vertex "v";
-            u <- GA.vertex "u";
-            w <- GA.vertex "w";
-            t <- GA.vertex "t";
-            r <- GA.vertex "r";
-            k <- GA.vertex "k";
+        let g = GAB.build $ do {
+            v <- GAB.vertex "v";
+            u <- GAB.vertex "u";
+            w <- GAB.vertex "w";
+            t <- GAB.vertex "t";
+            r <- GAB.vertex "r";
+            k <- GAB.vertex "k";
 
-            GA.edge "vw" v w;
-            GA.edge "ut" u t;
-            GA.edge "wt" w t;
-            GA.edge "wr" w r;
-            GA.edge "tu" t u;
-            GA.edge "tk" t k
+            GAB.edge "vw" v w;
+            GAB.edge "ut" u t;
+            GAB.edge "wt" w t;
+            GAB.edge "wr" w r;
+            GAB.edge "tu" t u;
+            GAB.edge "tk" t k
         }
         let isStart = (`elem` ["v", "u"])
         let h = (\_ -> (+ 1) . L.sum . L.map snd)
@@ -522,17 +486,17 @@ transformdSpec = describe "transformd" $ do
 
     it "should transform an empty graph to an empty graph" $ do
 
-        let g = GA.transformd (const True) (\_ _ -> ()) (const ()) (GA.build (pure ()))
+        let g = GA.transformd (const True) (\_ _ -> ()) (const ()) (GAB.build (pure ()))
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
 
     it "should transform all vertices to default values" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "v";
-            GA.vertex "u";
-            GA.vertex "w";
+        let g = GAB.build $ do {
+            GAB.vertex "v";
+            GAB.vertex "u";
+            GAB.vertex "w";
             pure ()
         }
         let g' = GA.transformd (const False) (\_ _ -> 0) (const 1) g
@@ -542,10 +506,10 @@ transformdSpec = describe "transformd" $ do
 
     it "should transform all vertices to non-default values" $ do
 
-        let g = GA.build $ do {
-            GA.vertex "v";
-            GA.vertex "u";
-            GA.vertex "w";
+        let g = GAB.build $ do {
+            GAB.vertex "v";
+            GAB.vertex "u";
+            GAB.vertex "w";
             pure ()
         }
         let g' = GA.transformd (const True) (\_ _ -> 0) (const 1) g
@@ -555,11 +519,11 @@ transformdSpec = describe "transformd" $ do
 
     it "should transform all vertices from a component to non-default values" $ do
 
-        let g = GA.build $ do {
-            v <- GA.vertex "v";
-            u <- GA.vertex "u";
-            w <- GA.vertex "w";
-            GA.edge "vw" v w
+        let g = GAB.build $ do {
+            v <- GAB.vertex "v";
+            u <- GAB.vertex "u";
+            w <- GAB.vertex "w";
+            GAB.edge "vw" v w
         }
         let g' = GA.transformd (== "v") (\_ _ -> 0) (const 1) g
 
@@ -568,20 +532,20 @@ transformdSpec = describe "transformd" $ do
 
     it "should transform all vertices to distance from source" $ do
 
-        let g = GA.build $ do {
-            v <- GA.vertex "v";
-            u <- GA.vertex "u";
-            w <- GA.vertex "w";
-            t <- GA.vertex "t";
-            r <- GA.vertex "r";
-            k <- GA.vertex "k";
+        let g = GAB.build $ do {
+            v <- GAB.vertex "v";
+            u <- GAB.vertex "u";
+            w <- GAB.vertex "w";
+            t <- GAB.vertex "t";
+            r <- GAB.vertex "r";
+            k <- GAB.vertex "k";
 
-            GA.edge "vw" v w;
-            GA.edge "ut" u t;
-            GA.edge "wt" w t;
-            GA.edge "wr" w r;
-            GA.edge "tu" t u;
-            GA.edge "tk" t k
+            GAB.edge "vw" v w;
+            GAB.edge "ut" u t;
+            GAB.edge "wt" w t;
+            GAB.edge "wr" w r;
+            GAB.edge "tu" t u;
+            GAB.edge "tk" t k
         }
         let isStart = (`elem` ["v", "u"])
         let d = (\preds _ -> (+ 1) . L.sum . L.map fst $ preds)
@@ -592,7 +556,6 @@ transformdSpec = describe "transformd" $ do
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract" $ do
-    buildSpec
     verticesSpec
     edgesSpec
     vmapSpec

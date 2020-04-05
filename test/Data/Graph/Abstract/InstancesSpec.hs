@@ -2,6 +2,7 @@ module Data.Graph.Abstract.InstancesSpec (spec) where
 
 import qualified Data.Maybe as M
 import qualified Data.Graph.Abstract as GA
+import qualified Data.Graph.Abstract.Builder as GAB
 import qualified Data.Graph.Abstract.Common as GAC
 import qualified Data.Graph.Abstract.Instances as GAI
 import qualified Data.List as L
@@ -24,10 +25,10 @@ flattenSpec = describe "flatten" $ do
         let g1 = GAC.empty
         let g2 = GAC.empty
         let g3 = GAC.empty
-        let g' = GA.build $ do {
-            GA.vertex g1;
-            GA.vertex g2;
-            GA.vertex g3;
+        let g' = GAB.build $ do {
+            GAB.vertex g1;
+            GAB.vertex g2;
+            GAB.vertex g3;
             pure ()
         }
 
@@ -38,31 +39,31 @@ flattenSpec = describe "flatten" $ do
 
     it "should convert a graph of graphs of isolated vertices into a graph of isolated vertices" $ do
 
-        let g1 = GA.build $ do {
-            GA.vertex 1;
-            GA.vertex 2;
-            GA.vertex 3;
+        let g1 = GAB.build $ do {
+            GAB.vertex 1;
+            GAB.vertex 2;
+            GAB.vertex 3;
             pure()
         }
 
-        let g2 = GA.build $ do {
-            GA.vertex 4;
-            GA.vertex 5;
-            GA.vertex 6;
+        let g2 = GAB.build $ do {
+            GAB.vertex 4;
+            GAB.vertex 5;
+            GAB.vertex 6;
             pure()
         }
 
-        let g3 = GA.build $ do {
-            GA.vertex 7;
-            GA.vertex 8;
-            GA.vertex 9;
+        let g3 = GAB.build $ do {
+            GAB.vertex 7;
+            GAB.vertex 8;
+            GAB.vertex 9;
             pure()
         }
 
-        let g' = GA.build $ do {
-            GA.vertex g1;
-            GA.vertex g2;
-            GA.vertex g3;
+        let g' = GAB.build $ do {
+            GAB.vertex g1;
+            GAB.vertex g2;
+            GAB.vertex g3;
             pure ()
         }
 
@@ -73,37 +74,37 @@ flattenSpec = describe "flatten" $ do
 
     it "should preserve edges within graphs" $ do
 
-        let g1 = GA.build $ do {
-            v1 <- GA.vertex 1;
-            v2 <- GA.vertex 2;
-            v3 <- GA.vertex 3;
-            GA.edge 12 v1 v2;
-            GA.edge 23 v2 v3;
+        let g1 = GAB.build $ do {
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
+            v3 <- GAB.vertex 3;
+            GAB.edge 12 v1 v2;
+            GAB.edge 23 v2 v3;
             pure()
         }
 
-        let g2 = GA.build $ do {
-            v4 <- GA.vertex 4;
-            v5 <- GA.vertex 5;
-            v6 <- GA.vertex 6;
-            GA.edge 46 v4 v6;
-            GA.edge 54 v5 v4;
+        let g2 = GAB.build $ do {
+            v4 <- GAB.vertex 4;
+            v5 <- GAB.vertex 5;
+            v6 <- GAB.vertex 6;
+            GAB.edge 46 v4 v6;
+            GAB.edge 54 v5 v4;
             pure()
         }
 
-        let g3 = GA.build $ do {
-            v7 <- GA.vertex 7;
-            v8 <- GA.vertex 8;
-            v9 <- GA.vertex 9;
-            GA.edge 97 v9 v7;
-            GA.edge 98 v9 v8;
+        let g3 = GAB.build $ do {
+            v7 <- GAB.vertex 7;
+            v8 <- GAB.vertex 8;
+            v9 <- GAB.vertex 9;
+            GAB.edge 97 v9 v7;
+            GAB.edge 98 v9 v8;
             pure()
         }
 
-        let g' = GA.build $ do {
-            GA.vertex g1;
-            GA.vertex g2;
-            GA.vertex g3;
+        let g' = GAB.build $ do {
+            GAB.vertex g1;
+            GAB.vertex g2;
+            GAB.vertex g3;
             pure ()
         }
 
@@ -118,31 +119,31 @@ flattenSpec = describe "flatten" $ do
 
     it "should convert edges between graphs into edges between all pairs of vertices" $ do
 
-        let g1 = GA.build $ do {
-            GA.vertex 1;
-            GA.vertex 2;
+        let g1 = GAB.build $ do {
+            GAB.vertex 1;
+            GAB.vertex 2;
             pure()
         }
 
-        let g2 = GA.build $ do {
-            GA.vertex 3;
+        let g2 = GAB.build $ do {
+            GAB.vertex 3;
             pure()
         }
 
-        let g3 = GA.build $ do {
-            GA.vertex 4;
-            GA.vertex 5;
-            GA.vertex 6;
+        let g3 = GAB.build $ do {
+            GAB.vertex 4;
+            GAB.vertex 5;
+            GAB.vertex 6;
             pure()
         }
 
-        let g' = GA.build $ do {
-            v1 <- GA.vertex g1;
-            v2 <- GA.vertex g2;
-            v3 <- GA.vertex g3;
+        let g' = GAB.build $ do {
+            v1 <- GAB.vertex g1;
+            v2 <- GAB.vertex g2;
+            v3 <- GAB.vertex g3;
 
-            GA.edge 13 v1 v3;
-            GA.edge 32 v3 v2;
+            GAB.edge 13 v1 v3;
+            GAB.edge 32 v3 v2;
 
             pure ()
         }
@@ -158,36 +159,36 @@ flattenSpec = describe "flatten" $ do
 
     it "should flatten a graph of graphs" $ do
 
-        let g1 = GA.build $ do {
-            v1 <- GA.vertex 1;
-            v2 <- GA.vertex 2;
-            GA.edge 21 v2 v1;
+        let g1 = GAB.build $ do {
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
+            GAB.edge 21 v2 v1;
             pure()
         }
 
-        let g2 = GA.build $ do {
-            v3 <- GA.vertex 3;
-            GA.edge 33 v3 v3;
+        let g2 = GAB.build $ do {
+            v3 <- GAB.vertex 3;
+            GAB.edge 33 v3 v3;
             pure()
         }
 
-        let g3 = GA.build $ do {
-            v4 <- GA.vertex 4;
-            v5 <- GA.vertex 5;
-            v6 <- GA.vertex 6;
+        let g3 = GAB.build $ do {
+            v4 <- GAB.vertex 4;
+            v5 <- GAB.vertex 5;
+            v6 <- GAB.vertex 6;
 
-            GA.edge 54 v5 v4;
-            GA.edge 56 v5 v6;
+            GAB.edge 54 v5 v4;
+            GAB.edge 56 v5 v6;
             pure()
         }
 
-        let g' = GA.build $ do {
-            v1 <- GA.vertex g1;
-            v2 <- GA.vertex g2;
-            v3 <- GA.vertex g3;
+        let g' = GAB.build $ do {
+            v1 <- GAB.vertex g1;
+            v2 <- GAB.vertex g2;
+            v3 <- GAB.vertex g3;
 
-            GA.edge 1133 v1 v3;
-            GA.edge 3322 v3 v2;
+            GAB.edge 1133 v1 v3;
+            GAB.edge 3322 v3 v2;
 
             pure ()
         }
@@ -214,14 +215,14 @@ fmapSpec = describe "fmap" $ do
 
     it "should not change graph with id function" $ do
 
-        let g = GA.build $ do {
-            a <- GA.vertex "a";
-            b <- GA.vertex "b";
-            c <- GA.vertex "c";
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
-            GA.edge "e1" b a;
-            GA.edge "e2" c a;
-            GA.edge "e3" c b
+            GAB.edge "e1" b a;
+            GAB.edge "e2" c a;
+            GAB.edge "e3" c b
         }
         let g' = fmap id g
 
@@ -230,14 +231,14 @@ fmapSpec = describe "fmap" $ do
 
     it "should not change graph structure" $ do
 
-        let g = GA.build $ do {
-            v0 <- GA.vertex 0;
-            v1 <- GA.vertex 1;
-            v2 <- GA.vertex 2;
+        let g = GAB.build $ do {
+            v0 <- GAB.vertex 0;
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
 
-            GA.edge "e1" v1 v0;
-            GA.edge "e2" v2 v0;
-            GA.edge "e3" v2 v1
+            GAB.edge "e1" v1 v0;
+            GAB.edge "e2" v2 v0;
+            GAB.edge "e3" v2 v1
         }
         let g' = fmap (+ 1) g
 
@@ -265,18 +266,18 @@ apSpec = describe "ap" $ do
 
     it "should return a graph of all possible combinations" $ do
 
-        let gf = GA.build $ do {
-            f0 <- GA.vertex (2 +);
-            f1 <- GA.vertex (3 *);
+        let gf = GAB.build $ do {
+            f0 <- GAB.vertex (2 +);
+            f1 <- GAB.vertex (3 *);
 
-            GA.edge "f01" f0 f1
+            GAB.edge "f01" f0 f1
         }
 
-        let gx = GA.build $ do {
-            v0 <- GA.vertex (5 :: Int);
-            v1 <- GA.vertex 30;
+        let gx = GAB.build $ do {
+            v0 <- GAB.vertex (5 :: Int);
+            v1 <- GAB.vertex 30;
 
-            GA.edge "v10" v1 v0
+            GAB.edge "v10" v1 v0
         }
 
         let g' = gf <*> gx
@@ -308,13 +309,13 @@ bindSpec = describe "bind" $ do
 
     it "should return a graph with duplicated vertices" $ do
 
-        let g = GA.build $ do {
-            v0 <- GA.vertex 0;
-            v1 <- GA.vertex 1;
-            v2 <- GA.vertex 2;
+        let g = GAB.build $ do {
+            v0 <- GAB.vertex 0;
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
 
-            GA.edge "01" v0 v1;
-            GA.edge "12" v1 v2
+            GAB.edge "01" v0 v1;
+            GAB.edge "12" v1 v2
         }
 
         let f n = GAC.isolated (L.replicate n n)

@@ -1,12 +1,7 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RankNTypes #-}
-
 module Data.Graph.Abstract where
 
 import Control.Monad
 import Control.Monad.ST
-import qualified Control.Monad.State as State
-import Control.Monad.State (State)
 import qualified Data.List as L
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as VG
@@ -14,8 +9,6 @@ import qualified Data.Vector.Mutable as VM
 import Data.Vector ((!))
 import Data.STRef
 import qualified Data.Queue.Mutable as QM
-
-newtype Vertex s = Vertex { unvertex :: Int }
 
 type Node = Int
 
@@ -43,10 +36,6 @@ data Graph e v = Graph
 
 type Graph' = Graph ()
 
--- build :: (Vertex -> a) -> [Edge b]
--- build :: [(a, [(b, Offset)])]
--- build :: [a] -> [Edge b]
-
 buildFromList_ :: [v] -> [Edge e] -> Graph e v
 buildFromList_ vs es = Graph
     { verts = vs' 
@@ -60,50 +49,6 @@ buildFromList_ vs es = Graph
         forM_ es $ \e -> do
             VM.modify esL ((eAdj_ e):) (eFrom e)
         return esL
-
-data GraphBuilderState s e v = GraphBuilderState
-    { gbsCount :: Int
-    , gbsVerts :: [v]
-    , gbsEdges :: [Edge e]
-    }
-
-newtype GraphBuilder s e v t = GraphBuilder (State (GraphBuilderState s e v) t)
-    deriving (Functor, Applicative, Monad)
-
-build :: (forall s. GraphBuilder s e v t) -> Graph e v
-build (GraphBuilder builder) =
-    buildFromList_ (reverse . gbsVerts $ state) (gbsEdges state)
-  where
-    state = State.execState builder $ GraphBuilderState
-        { gbsCount = 0
-        , gbsVerts = []
-        , gbsEdges = []
-        }
-
-vertex :: v -> GraphBuilder s e v (Vertex s)
-vertex v = GraphBuilder $ do
-    state <- State.get
-    State.put $ state
-        { gbsCount = gbsCount state + 1
-        , gbsVerts = v:(gbsVerts state)
-        }
-    pure (Vertex (gbsCount state))
-
-edge :: e -> Vertex s -> Vertex s -> GraphBuilder s e v ()
-edge l (Vertex v) (Vertex u)= GraphBuilder $ do
-    state <- State.get
-    State.put $ state
-        { gbsEdges = edge:(gbsEdges state)
-        }
-  where
-    edge = Edge
-        { eFrom = v
-        , eTo = u
-        , eVal = l
-        }
-
-edge' :: Vertex s -> Vertex s -> GraphBuilder s () v ()
-edge' = edge ()
 
 numVertices :: Graph e v -> Int
 numVertices = V.length . verts
