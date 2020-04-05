@@ -9,27 +9,27 @@ import qualified Data.Graph.Abstract as GA
 
 newtype Vertex s = Vertex { unvertex :: Int }
 
-data GraphBuilderState s e v = GraphBuilderState
+data BuilderState s e v = BuilderState
     { gbsCount :: Int
     , gbsVerts :: [v]
     , gbsEdges :: [GA.Edge e]
     }
 
-newtype GraphBuilder s e v t = GraphBuilder (State (GraphBuilderState s e v) t)
+newtype Builder s e v t = Builder (State (BuilderState s e v) t)
     deriving (Functor, Applicative, Monad)
 
-build :: (forall s. GraphBuilder s e v t) -> GA.Graph e v
-build (GraphBuilder builder) =
+build :: (forall s. Builder s e v t) -> GA.Graph e v
+build (Builder builder) =
     GA.buildFromList_ (reverse . gbsVerts $ state) (gbsEdges state)
   where
-    state = State.execState builder $ GraphBuilderState
+    state = State.execState builder $ BuilderState
         { gbsCount = 0
         , gbsVerts = []
         , gbsEdges = []
         }
 
-vertex :: v -> GraphBuilder s e v (Vertex s)
-vertex v = GraphBuilder $ do
+vertex :: v -> Builder s e v (Vertex s)
+vertex v = Builder $ do
     state <- State.get
     State.put $ state
         { gbsCount = gbsCount state + 1
@@ -37,8 +37,8 @@ vertex v = GraphBuilder $ do
         }
     pure (Vertex (gbsCount state))
 
-edge :: e -> Vertex s -> Vertex s -> GraphBuilder s e v ()
-edge l (Vertex v) (Vertex u)= GraphBuilder $ do
+edge :: e -> Vertex s -> Vertex s -> Builder s e v ()
+edge l (Vertex v) (Vertex u) = Builder $ do
     state <- State.get
     State.put $ state
         { gbsEdges = edge:(gbsEdges state)
@@ -50,5 +50,5 @@ edge l (Vertex v) (Vertex u)= GraphBuilder $ do
         , GA.eVal = l
         }
 
-edge' :: Vertex s -> Vertex s -> GraphBuilder s () v ()
+edge' :: Vertex s -> Vertex s -> Builder s () v ()
 edge' = edge ()
