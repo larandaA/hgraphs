@@ -33,7 +33,7 @@ instance Applicative (GA.Graph e) where
         pure (f x)
 
 instance Monad (GA.Graph e) where
-    
+
     gx >>= f = flatten (f <$> gx)
 
 instance Foldable (GA.Graph e) where

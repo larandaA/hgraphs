@@ -43,21 +43,21 @@ flattenSpec = describe "flatten" $ do
             GAB.vertex 1;
             GAB.vertex 2;
             GAB.vertex 3;
-            pure()
+            pure ()
         }
 
         let g2 = GAB.build $ do {
             GAB.vertex 4;
             GAB.vertex 5;
             GAB.vertex 6;
-            pure()
+            pure ()
         }
 
         let g3 = GAB.build $ do {
             GAB.vertex 7;
             GAB.vertex 8;
             GAB.vertex 9;
-            pure()
+            pure ()
         }
 
         let g' = GAB.build $ do {
@@ -80,7 +80,7 @@ flattenSpec = describe "flatten" $ do
             v3 <- GAB.vertex 3;
             GAB.edge 12 v1 v2;
             GAB.edge 23 v2 v3;
-            pure()
+            pure ()
         }
 
         let g2 = GAB.build $ do {
@@ -89,7 +89,7 @@ flattenSpec = describe "flatten" $ do
             v6 <- GAB.vertex 6;
             GAB.edge 46 v4 v6;
             GAB.edge 54 v5 v4;
-            pure()
+            pure ()
         }
 
         let g3 = GAB.build $ do {
@@ -98,7 +98,7 @@ flattenSpec = describe "flatten" $ do
             v9 <- GAB.vertex 9;
             GAB.edge 97 v9 v7;
             GAB.edge 98 v9 v8;
-            pure()
+            pure ()
         }
 
         let g' = GAB.build $ do {
@@ -122,19 +122,19 @@ flattenSpec = describe "flatten" $ do
         let g1 = GAB.build $ do {
             GAB.vertex 1;
             GAB.vertex 2;
-            pure()
+            pure ()
         }
 
         let g2 = GAB.build $ do {
             GAB.vertex 3;
-            pure()
+            pure ()
         }
 
         let g3 = GAB.build $ do {
             GAB.vertex 4;
             GAB.vertex 5;
             GAB.vertex 6;
-            pure()
+            pure ()
         }
 
         let g' = GAB.build $ do {
@@ -163,13 +163,13 @@ flattenSpec = describe "flatten" $ do
             v1 <- GAB.vertex 1;
             v2 <- GAB.vertex 2;
             GAB.edge 21 v2 v1;
-            pure()
+            pure ()
         }
 
         let g2 = GAB.build $ do {
             v3 <- GAB.vertex 3;
             GAB.edge 33 v3 v3;
-            pure()
+            pure ()
         }
 
         let g3 = GAB.build $ do {
@@ -179,7 +179,7 @@ flattenSpec = describe "flatten" $ do
 
             GAB.edge 54 v5 v4;
             GAB.edge 56 v5 v6;
-            pure()
+            pure ()
         }
 
         let g' = GAB.build $ do {
@@ -350,7 +350,7 @@ traverseSpec = describe "traverse" $ do
         let mg = traverse pure g
 
         M.isJust mg `shouldBe` True
-        
+
         let (Just g') = mg
 
         GA.vertices g' `shouldMatchList` [1, 2, 3]
@@ -362,7 +362,7 @@ traverseSpec = describe "traverse" $ do
 
         let f 2 = Nothing
             f _ = Just ()
-        
+
         M.isNothing (traverse f g) `shouldBe` True
 
 
