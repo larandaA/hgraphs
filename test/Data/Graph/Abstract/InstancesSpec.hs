@@ -3,6 +3,7 @@ module Data.Graph.Abstract.InstancesSpec (spec) where
 import qualified Data.Maybe as M
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Common as GAC
+import qualified Data.List as L
 import Data.Graph.Abstract.Instances
 import Test.Hspec
 
@@ -93,6 +94,43 @@ apSpec = describe "ap" $ do
             , (90, "v10", 15), (32, "v10", 7)
             ]
 
+bindSpec :: Spec
+bindSpec = describe "bind" $ do
+
+    it "should return an empty graph if function returns an empty graph" $ do
+
+        let g = GAC.singleton ()
+        let g' = g >>= (const GAC.empty)
+
+        length (GA.vertices g') `shouldBe` 0
+        length (GA.edges g') `shouldBe` 0
+
+    it "should return an empty graph if original graph is empty" $ do
+
+        let g = GAC.empty >>= id
+
+        length (GA.vertices g) `shouldBe` 0
+        length (GA.edges g) `shouldBe` 0
+
+    it "should return a graph with duplicated vertices" $ do
+
+        let g = GA.build $ do {
+            v0 <- GA.vertex 0;
+            v1 <- GA.vertex 1;
+            v2 <- GA.vertex 2;
+
+            GA.edge "01" v0 v1;
+            GA.edge "12" v1 v2
+        }
+
+        let f n = GAC.isolated (L.replicate n n)
+
+        let g' = g >>= f
+
+        GA.vertices g' `shouldMatchList` [1, 2, 2]
+        GA.edges g' `shouldMatchList` [ (1, "12", 2), (1, "12", 2) ]
+
+
 foldrSpec :: Spec
 foldrSpec = describe "foldr" $ do
 
@@ -137,5 +175,6 @@ spec :: Spec
 spec = describe "Data.Graph.Abstract.Instances" $ do
     fmapSpec
     apSpec
+    bindSpec
     foldrSpec
     traverseSpec
