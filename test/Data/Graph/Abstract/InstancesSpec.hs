@@ -49,6 +49,50 @@ fmapSpec = describe "fmap" $ do
         GA.vertices g' `shouldMatchList` [1, 2, 3]
         GA.edges g' `shouldMatchList` [(2, "e1", 1), (3, "e2", 1), (3, "e3", 2)]
 
+apSpec :: Spec
+apSpec = describe "ap" $ do
+
+    it "should return an empty graph if graph of functions is empty" $ do
+
+        let gx = GAC.singleton ()
+        let g' = GAC.empty <*> gx
+
+        length (GA.vertices g') `shouldBe` 0
+        length (GA.edges g') `shouldBe` 0
+
+    it "should return an empty graph if graph of values is empty" $ do
+
+        let gf = GAC.singleton id
+        let g' = gf <*> GAC.empty
+
+        length (GA.vertices g') `shouldBe` 0
+        length (GA.edges g') `shouldBe` 0
+
+    it "should return a graph of all possible combinations" $ do
+
+        let gf = GA.build $ do {
+            f0 <- GA.vertex (2 +);
+            f1 <- GA.vertex (3 *);
+
+            GA.edge "f01" f0 f1
+        }
+
+        let gx = GA.build $ do {
+            v0 <- GA.vertex (5 :: Int);
+            v1 <- GA.vertex 30;
+
+            GA.edge "v10" v1 v0
+        }
+
+        let g' = gf <*> gx
+
+        GA.vertices g' `shouldMatchList` [7, 15, 32, 90]
+        GA.edges g' `shouldMatchList`
+            [ (7, "f01", 15), (32, "f01", 90)
+            , (7, "f01", 90), (32, "f01", 15)
+            , (90, "v10", 15), (32, "v10", 7)
+            ]
+
 foldrSpec :: Spec
 foldrSpec = describe "foldr" $ do
 
@@ -92,5 +136,6 @@ traverseSpec = describe "traverse" $ do
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Instances" $ do
     fmapSpec
+    apSpec
     foldrSpec
     traverseSpec
