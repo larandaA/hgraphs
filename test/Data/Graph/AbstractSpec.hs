@@ -12,7 +12,7 @@ verticesSpec = describe "vertices" $ do
 
     it "should be empty for empty graph" $ do
 
-        let g = GAB.build (pure ())
+        let g = GAC.empty
 
         GA.vertices g `shouldBe` ([] :: [()])
 
@@ -52,7 +52,7 @@ edgesSpec = describe "edges" $ do
 
     it "should be empty for empty graph" $ do
 
-        let g = GAB.build (pure ())
+        let g = GAC.empty
 
         GA.edges g `shouldBe` ([] :: [((), (), ())])
 
@@ -84,7 +84,7 @@ vmapSpec = describe "vmap" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = GA.vmap (+ 1) (GAB.build (pure ()))
+        let g = GA.vmap (+ 1) GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -126,7 +126,7 @@ emapSpec = describe "emap" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = GA.emap (+ 1) (GAB.build (pure ()))
+        let g = GA.emap (+ 1) GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -169,7 +169,7 @@ emapcSpec = describe "emapc" $ do
 
     it "should preserve empty graph" $ do
 
-        let g = GA.emapc (\_ e _ -> e) (GAB.build (pure ()))
+        let g = GA.emapc (\_ e _ -> e) GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -223,8 +223,8 @@ zipSpec = describe "zip" $ do
 
     it "should result in empty graph" $ do
 
-        let g1 = GAB.build (pure ())
-        let g2 = GAB.build (pure ())
+        let g1 = GAC.empty
+        let g2 = GAC.empty
         let g = GA.zip g1 g2
 
         length (GA.vertices g) `shouldBe` 0
@@ -279,7 +279,7 @@ succsSpec = describe "succs" $ do
 
     it "should create empty graph" $ do
 
-        let g = GA.succs (GAB.build (pure ()))
+        let g = GA.succs GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -325,7 +325,7 @@ predsSpec = describe "preds" $ do
 
     it "should create empty graph" $ do
 
-        let g = GA.preds (GAB.build (pure ()))
+        let g = GA.preds GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -371,7 +371,7 @@ transposeSpec = describe "transpose" $ do
 
     it "should create empty graph" $ do
 
-        let g = GA.transpose (GAB.build (pure ()))
+        let g = GA.transpose GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -414,7 +414,7 @@ transformuSpec = describe "transformu" $ do
 
     it "should transform an empty graph to an empty graph" $ do
 
-        let g = GA.transformu (const True) (\_ _ -> ()) (const ()) (GAB.build (pure ()))
+        let g = GA.transformu (const True) (\_ _ -> ()) (const ()) GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
@@ -486,7 +486,7 @@ transformdSpec = describe "transformd" $ do
 
     it "should transform an empty graph to an empty graph" $ do
 
-        let g = GA.transformd (const True) (\_ _ -> ()) (const ()) (GAB.build (pure ()))
+        let g = GA.transformd (const True) (\_ _ -> ()) (const ()) GAC.empty
 
         length (GA.vertices g) `shouldBe` 0
         length (GA.edges g) `shouldBe` 0
