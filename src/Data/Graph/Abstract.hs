@@ -234,31 +234,3 @@ flatten g = build $ do
     flip V.imapM_ (adjs g) $ \i adjsV -> do
         V.forM_ adjsV $ \adjV -> do
             sequence_ [edge (aVal adjV) v u | v <- V.toList (vs ! i), u <- V.toList (vs ! aTo adjV)]
-
-
-instance Functor (Graph e) where
-    
-    fmap = vmap
-
-instance Applicative (Graph e) where
-
-    pure v = build $ do
-        vertex v
-        pure ()
-
-    gf <*> gx = do
-        f <- gf
-        x <- gx
-        pure (f x)
-
-instance Monad (Graph e) where
-    
-    gx >>= f = flatten (f <$> gx)
-
-instance Foldable (Graph e) where
-
-    foldr f z = L.foldr f z . vertices
-
-instance Traversable (Graph e) where
-
-    traverse f g = (\verts' -> g { verts = verts' }) <$> traverse f (verts g)
