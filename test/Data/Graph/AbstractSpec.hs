@@ -1,6 +1,5 @@
 module Data.Graph.AbstractSpec (spec) where
 
-import Control.Monad.ST
 import qualified Data.List as L
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Common as GAC
