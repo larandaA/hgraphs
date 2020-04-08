@@ -2,20 +2,21 @@ module Data.Graph.Abstract.Instances where
 
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Builder as GAB
+import qualified Data.Graph.Abstract.Internal as GAI
 import qualified Data.List as L
 import Data.Vector ((!))
 import qualified Data.Vector as V
 
 flatten :: GA.Graph e (GA.Graph e v) -> GA.Graph e v
 flatten g = GAB.build $ do
-    vs <- traverse (traverse GAB.vertex) . V.map GA.verts . GA.verts $ g
-    V.forM_ (V.zip vs (V.map GA.adjs (GA.verts g))) $ \(vsG, adjsG) -> do
+    vs <- traverse (traverse GAB.vertex) . V.map GAI.verts . GAI.verts $ g
+    V.forM_ (V.zip vs (V.map GAI.adjs (GAI.verts g))) $ \(vsG, adjsG) -> do
         flip V.imapM_ adjsG $ \i adjsV -> do
             let v = vsG ! i
-            sequence_ [GAB.edge (GA.aVal adj) v (vsG ! GA.aTo adj) | adj <- V.toList adjsV]
-    flip V.imapM_ (GA.adjs g) $ \i adjsV -> do
+            sequence_ [GAB.edge (GAI.aVal adj) v (vsG ! GAI.aTo adj) | adj <- V.toList adjsV]
+    flip V.imapM_ (GAI.adjs g) $ \i adjsV -> do
         V.forM_ adjsV $ \adjV -> do
-            sequence_ [GAB.edge (GA.aVal adjV) v u | v <- V.toList (vs ! i), u <- V.toList (vs ! GA.aTo adjV)]
+            sequence_ [GAB.edge (GAI.aVal adjV) v u | v <- V.toList (vs ! i), u <- V.toList (vs ! GAI.aTo adjV)]
 
 instance Functor (GA.Graph e) where
     
@@ -42,4 +43,4 @@ instance Foldable (GA.Graph e) where
 
 instance Traversable (GA.Graph e) where
 
-    traverse f g = (\verts' -> g { GA.verts = verts' }) <$> traverse f (GA.verts g)
+    traverse f g = (\verts' -> g { GAI.verts = verts' }) <$> traverse f (GAI.verts g)

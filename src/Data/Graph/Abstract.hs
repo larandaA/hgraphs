@@ -1,7 +1,17 @@
-module Data.Graph.Abstract where
+module Data.Graph.Abstract
+    ( Graph, Graph'
+    , numVertices
+    , vertices, edges
+    , vmap, emap, emapc
+    , Data.Graph.Abstract.zip, transpose
+    , succs, preds
+    , degree
+    , transformu, transformd
+    ) where
 
 import Control.Monad
 import Control.Monad.ST
+import Data.Graph.Abstract.Internal
 import qualified Data.List as L
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as VG
@@ -9,46 +19,6 @@ import qualified Data.Vector.Mutable as VM
 import Data.Vector ((!))
 import Data.STRef
 import qualified Data.Queue.Mutable as QM
-
-type Node = Int
-
-data Edge e = Edge
-    { eTo :: Node
-    , eFrom :: Node
-    , eVal :: e
-    }
-
-eAdj_ :: Edge e -> Adj e
-eAdj_ e = Adj
-    { aTo = eTo e
-    , aVal = eVal e
-    }
-
-data Adj e = Adj
-    { aTo :: Node
-    , aVal :: e
-    }
-
-data Graph e v = Graph
-    { verts :: V.Vector v
-    , adjs :: V.Vector (V.Vector (Adj e))
-    }
-
-type Graph' = Graph ()
-
-buildFromList_ :: [v] -> [Edge e] -> Graph e v
-buildFromList_ vs es = Graph
-    { verts = vs' 
-    , adjs = V.map V.fromList es'
-    }
-  where
-    n = V.length vs'
-    vs' = V.fromList vs
-    es' = V.create $ do
-        esL <- VM.replicate n []
-        forM_ es $ \e -> do
-            VM.modify esL ((eAdj_ e):) (eFrom e)
-        return esL
 
 numVertices :: Graph e v -> Int
 numVertices = V.length . verts
