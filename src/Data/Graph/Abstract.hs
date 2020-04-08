@@ -3,7 +3,7 @@ module Data.Graph.Abstract
     , numVertices
     , vertices, edges
     , vmap, emap, emapc
-    , Data.Graph.Abstract.zip, transpose
+    , zip, transpose
     , succs, preds
     , degree
     , transformu, transformd
@@ -19,6 +19,7 @@ import qualified Data.Vector.Mutable as VM
 import Data.Vector ((!))
 import Data.STRef
 import qualified Data.Queue.Mutable as QM
+import Prelude hiding (zip)
 
 numVertices :: Graph e v -> Int
 numVertices = V.length . verts

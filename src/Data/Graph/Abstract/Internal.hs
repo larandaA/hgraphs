@@ -1,4 +1,8 @@
-module Data.Graph.Abstract.Internal where
+module Data.Graph.Abstract.Internal
+    ( Node, Edge(..), Adj(..)
+    , Graph(..), Graph',
+    buildFromList
+    ) where
 
 import Control.Monad
 import qualified Data.Vector as V

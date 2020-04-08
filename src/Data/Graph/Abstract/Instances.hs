@@ -1,4 +1,6 @@
-module Data.Graph.Abstract.Instances where
+module Data.Graph.Abstract.Instances
+    ( flatten
+    ) where
 
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Builder as GAB

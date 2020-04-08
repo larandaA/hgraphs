@@ -1,7 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Data.Graph.Abstract.Builder where
+module Data.Graph.Abstract.Builder
+    ( Vertex, Builder
+    , build, vertex
+    , edge, edge'
+    ) where
 
 import qualified Control.Monad.State as State
 import Control.Monad.State (State)

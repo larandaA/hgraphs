@@ -1,8 +1,13 @@
-module Data.Graph.Abstract.Common where
+module Data.Graph.Abstract.Common
+    ( empty, isolated, singleton
+    , path, cycle
+    , clique, biclique, star
+    ) where
 
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Builder as GAB
 import qualified Data.List as L
+import Prelude hiding (cycle)
 
 empty :: GA.Graph e v
 empty = GAB.build $ pure ()
