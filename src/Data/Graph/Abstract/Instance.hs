@@ -1,4 +1,4 @@
-module Data.Graph.Abstract.Instances
+module Data.Graph.Abstract.Instance
     ( flatten
     ) where
 
@@ -21,7 +21,7 @@ flatten g = GAB.build $ do
             sequence_ [GAB.edge (GAI.aVal adjV) v u | v <- V.toList (vs ! i), u <- V.toList (vs ! GAI.aTo adjV)]
 
 instance Functor (GA.Graph e) where
-    
+
     fmap = GA.vmap
 
 instance Applicative (GA.Graph e) where

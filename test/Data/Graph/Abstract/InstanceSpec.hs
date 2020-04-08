@@ -1,10 +1,10 @@
-module Data.Graph.Abstract.InstancesSpec (spec) where
+module Data.Graph.Abstract.InstanceSpec (spec) where
 
 import qualified Data.Maybe as M
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Builder as GAB
 import qualified Data.Graph.Abstract.Common as GAC
-import qualified Data.Graph.Abstract.Instances as GAI
+import qualified Data.Graph.Abstract.Instance as GAI
 import qualified Data.List as L
 import Test.Hspec
 

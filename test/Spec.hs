@@ -3,7 +3,7 @@ import qualified Data.Queue.MutableSpec as Q
 import qualified Data.Graph.AbstractSpec as GA
 import qualified Data.Graph.Abstract.BuilderSpec as GAB
 import qualified Data.Graph.Abstract.CommonSpec as GAC
-import qualified Data.Graph.Abstract.InstancesSpec as GAI
+import qualified Data.Graph.Abstract.InstanceSpec as GAI
 
 main :: IO ()
 main = hspec $ do
