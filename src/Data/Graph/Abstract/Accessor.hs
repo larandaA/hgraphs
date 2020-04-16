@@ -9,6 +9,8 @@ import qualified Data.Graph.Abstract as GA
 import Data.Graph.Abstract (Graph)
 import qualified Data.Graph.Abstract.Internal as GAI
 import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as VM
+import Data.Vector.Mutable (STVector)
 import Data.Vector ((!))
 
 newtype Accessor s e v a = Accessor (Graph e v -> ST s a)
@@ -63,3 +65,17 @@ successors v = outgoing v >>= sequence . map target
 
 degree :: Vertex s -> Accessor s e v Int
 degree (Vertex i) = Accessor $ \g -> (pure . V.length) (GAI.adjs g ! i)
+
+newtype VArray s a = VArray (STVector s a)
+
+unvarray :: VArray s a -> STVector s a
+unvarray (VArray v) = v
+
+varray :: a -> Accessor s e v (VArray s a)
+varray a = Accessor $ \g -> fmap VArray (VM.replicate (GA.numVertices g) a)
+
+vget :: Vertex s -> VArray s a -> Accessor s e v a
+vget (Vertex i) (VArray v) = Accessor $ const (VM.read v i)
+
+vset :: Vertex s -> a -> VArray s a -> Accessor s e v ()
+vset (Vertex i) a (VArray v) = Accessor $ const (VM.write v i a)
