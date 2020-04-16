@@ -32,6 +32,9 @@ instance Monad (Accessor s e v) where
 
     (Accessor afa) >>= f = Accessor $ \g -> afa g >>= (\a -> unaccessor (f a) g)
 
+liftST :: ST s a -> Accessor s e v a
+liftST = Accessor . const
+
 newtype Vertex s = Vertex Int
 
 unvertex :: Vertex s -> Int
@@ -75,7 +78,7 @@ varray :: a -> Accessor s e v (VArray s a)
 varray a = Accessor $ \g -> fmap VArray (VM.replicate (GA.numVertices g) a)
 
 vget :: Vertex s -> VArray s a -> Accessor s e v a
-vget (Vertex i) (VArray v) = Accessor $ const (VM.read v i)
+vget (Vertex i) (VArray v) = liftST (VM.read v i)
 
 vset :: Vertex s -> a -> VArray s a -> Accessor s e v ()
-vset (Vertex i) a (VArray v) = Accessor $ const (VM.write v i a)
+vset (Vertex i) a (VArray v) = liftST (VM.write v i a)
