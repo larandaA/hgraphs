@@ -9,6 +9,7 @@ import qualified Data.Graph.Abstract as GA
 import Data.Graph.Abstract (Graph)
 import qualified Data.Graph.Abstract.Internal as GAI
 import qualified Data.Vector as V
+import Data.Vector (Vector)
 import qualified Data.Vector.Mutable as VM
 import Data.Vector.Mutable (STVector)
 import Data.Vector ((!))
@@ -82,3 +83,19 @@ vget (Vertex i) (VArray v) = liftST (VM.read v i)
 
 vset :: Vertex s -> a -> VArray s a -> Accessor s e v ()
 vset (Vertex i) a (VArray v) = liftST (VM.write v i a)
+
+newtype EArray s a = EArray (Vector (STVector s a))
+
+unearray :: EArray s a -> Vector (STVector s a)
+unearray (EArray v) = v
+
+earray :: a -> Accessor s e v (EArray s a)
+earray a = Accessor $ \g -> (fmap (EArray . V.fromList) . sequence . map replicated . V.toList) (GAI.adjs g)
+  where
+    replicated v = VM.replicate (V.length v) a
+
+eget :: Edge s -> EArray s a -> Accessor s e v a
+eget (Edge (Vertex i) j) (EArray v) = liftST (VM.read (v ! i) j)
+
+eset :: Edge s -> a -> EArray s a -> Accessor s e v ()
+eset (Edge (Vertex i) j) a (EArray v) = liftST (VM.write (v ! i) j a)
