@@ -1,7 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Data.Graph.Abstract.Accessor where
+module Data.Graph.Abstract.Accessor
+    ( Accessor
+    , liftST, execute
+    , Vertex, Edge
+    , vertices, value, outgoing, successors, degree
+    , edges, label, target
+    , VArray, varray, vget, vset
+    , EArray, earray, eget, eset
+    ) where
 
 import Control.Monad (join)
 import Control.Monad.ST (ST, runST)
