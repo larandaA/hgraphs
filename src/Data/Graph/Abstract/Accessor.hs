@@ -4,7 +4,7 @@
 module Data.Graph.Abstract.Accessor where
 
 import Control.Monad (join)
-import Control.Monad.ST (ST)
+import Control.Monad.ST (ST, runST)
 import qualified Data.Graph.Abstract as GA
 import Data.Graph.Abstract (Graph)
 import qualified Data.Graph.Abstract.Internal as GAI
@@ -18,6 +18,9 @@ newtype Accessor s e v a = Accessor (Graph e v -> ST s a)
 
 unaccessor :: Accessor s e v a -> Graph e v -> ST s a
 unaccessor (Accessor af) = af
+
+unaccessor' :: (forall s. Accessor s e v a) -> Graph e v -> (forall s. ST s a)
+unaccessor' (Accessor af) = af
 
 instance Functor (Accessor s e v) where
 
@@ -35,6 +38,9 @@ instance Monad (Accessor s e v) where
 
 liftST :: ST s a -> Accessor s e v a
 liftST = Accessor . const
+
+execute :: (forall s. Accessor s e v a) -> Graph e v -> a
+execute ac g = runST $ unaccessor' ac g
 
 newtype Vertex s = Vertex Int
 
