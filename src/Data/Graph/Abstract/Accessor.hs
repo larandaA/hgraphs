@@ -6,7 +6,7 @@ module Data.Graph.Abstract.Accessor
     , liftST, execute
     , Vertex, Edge
     , vertices, value, outgoing, successors, degree
-    , edges, label, target
+    , edges, label, source, target
     , VArray, varray, vget, vset
     , EArray, earray, eget, eset
     ) where
