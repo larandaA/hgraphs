@@ -98,6 +98,9 @@ vget (Vertex i) (VArray v) = liftST (VM.read v i)
 vset :: Vertex s -> a -> VArray s a -> Accessor s e v ()
 vset (Vertex i) a (VArray v) = liftST (VM.write v i a)
 
+vgraph :: VArray s a -> Accessor s e v (Graph e a)
+vgraph (VArray v) = Accessor $ \g -> fmap (\ls -> g { GAI.verts = ls } ) (V.freeze v)
+
 newtype EArray s a = EArray (Vector (STVector s a))
 
 unearray :: EArray s a -> Vector (STVector s a)
@@ -113,3 +116,10 @@ eget (Edge (Vertex i) j) (EArray v) = liftST (VM.read (v ! i) j)
 
 eset :: Edge s -> a -> EArray s a -> Accessor s e v ()
 eset (Edge (Vertex i) j) a (EArray v) = liftST (VM.write (v ! i) j a)
+
+egraph :: EArray s a -> Accessor s e v (Graph a v)
+egraph (EArray v) = Accessor $ \g -> do
+    v' <- traverse V.freeze v
+    pure $ g { GAI.adjs = newAdjs (GAI.adjs g) v' }
+  where
+    newAdjs = V.zipWith (V.zipWith (\adj a -> adj { GAI.aVal = a }))
