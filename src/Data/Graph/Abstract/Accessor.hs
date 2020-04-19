@@ -47,8 +47,8 @@ instance Monad (Accessor s e v) where
 liftST :: ST s a -> Accessor s e v a
 liftST = Accessor . const
 
-execute :: (forall s. Accessor s e v a) -> Graph e v -> a
-execute ac g = runST $ unaccessor' ac g
+execute :: Graph e v -> (forall s. Accessor s e v a) -> a
+execute g ac = runST $ unaccessor' ac g
 
 newtype Vertex s = Vertex Int
 
