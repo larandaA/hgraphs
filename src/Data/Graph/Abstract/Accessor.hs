@@ -92,11 +92,11 @@ unvarray (VArray v) = v
 varray :: a -> Accessor s e v (VArray s a)
 varray a = Accessor $ \g -> fmap VArray (VM.replicate (GA.numVertices g) a)
 
-vget :: Vertex s -> VArray s a -> Accessor s e v a
-vget (Vertex i) (VArray v) = liftST (VM.read v i)
+vget :: VArray s a -> Vertex s -> Accessor s e v a
+vget (VArray v) (Vertex i) = liftST (VM.read v i)
 
-vset :: Vertex s -> a -> VArray s a -> Accessor s e v ()
-vset (Vertex i) a (VArray v) = liftST (VM.write v i a)
+vset ::  VArray s a -> Vertex s -> a -> Accessor s e v ()
+vset (VArray v) (Vertex i) a = liftST (VM.write v i a)
 
 vgraph :: VArray s a -> Accessor s e v (Graph e a)
 vgraph (VArray v) = Accessor $ \g -> fmap (\ls -> g { GAI.verts = ls } ) (V.freeze v)
@@ -114,11 +114,11 @@ earray a = Accessor $ \g -> (fmap (EArray . V.fromList) . sequence . map replica
   where
     replicated v = VM.replicate (V.length v) a
 
-eget :: Edge s -> EArray s a -> Accessor s e v a
-eget (Edge (Vertex i) j) (EArray v) = liftST (VM.read (v ! i) j)
+eget :: EArray s a -> Edge s -> Accessor s e v a
+eget (EArray v) (Edge (Vertex i) j) = liftST (VM.read (v ! i) j)
 
-eset :: Edge s -> a -> EArray s a -> Accessor s e v ()
-eset (Edge (Vertex i) j) a (EArray v) = liftST (VM.write (v ! i) j a)
+eset :: EArray s a -> Edge s -> a -> Accessor s e v ()
+eset (EArray v) (Edge (Vertex i) j) a = liftST (VM.write (v ! i) j a)
 
 egraph :: EArray s a -> Accessor s e v (Graph a v)
 egraph (EArray v) = Accessor $ \g -> do
