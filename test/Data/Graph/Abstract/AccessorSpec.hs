@@ -1,5 +1,6 @@
 module Data.Graph.Abstract.AccessorSpec (spec) where
 
+import Control.Monad
 import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Accessor as GAA
 import qualified Data.Graph.Abstract.Builder as GAB
@@ -312,6 +313,65 @@ targetSpec = describe "target" $ do
 
         edges `shouldMatchList` [("a", "ab", "b"), ("a", "ac", "c"), ("b", "bc", "c")]
 
+varraySpec :: Spec
+varraySpec = describe "varray" $ do
+
+    it "should be filled with default values" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let varrayValues = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            varr <- GAA.varray 42;
+            traverse (GAA.vget varr) vs
+        }
+
+        varrayValues `shouldBe` [42, 42, 42, 42]
+
+    it "should change a value for the only vertex in a trivial graph" $ do
+
+        let g = GAC.singleton ()
+
+        let varrayValue = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            varr <- GAA.varray 42;
+            GAA.vset varr (head vs) 4816;
+            GAA.vget varr (head vs)
+        }
+
+        varrayValue `shouldBe` 4816
+
+    it "should not change a value while setting the same as default value" $ do
+
+        let g = GAC.singleton ()
+
+        let varrayValue = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            varr <- GAA.varray 42;
+            GAA.vset varr (head vs) 42;
+            GAA.vget varr (head vs)
+        }
+
+        varrayValue `shouldBe` 42
+
+    it "should contain different values for all vertices" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let varrayValues = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            varr <- GAA.varray 0;
+            forM_ vs $ \v -> do {
+                val <- GAA.value v;
+                GAA.vset varr v (val * val);
+            };
+            vals <- traverse GAA.value vs;
+            varrVals <- traverse (GAA.vget varr) vs;
+            pure (zip vals varrVals)
+        }
+
+        varrayValues `shouldMatchList` [(1, 1), (2, 4), (3, 9), (4, 16)]
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor" $ do
@@ -325,3 +385,4 @@ spec = describe "Data.Graph.Abstract.Accessor" $ do
     outgoingSpec
     labelSpec
     targetSpec
+    varraySpec
