@@ -443,6 +443,166 @@ earraySpec = describe "earray" $ do
             , ("bc", "bcbc"), ("cb", "cbcb")
             ]
 
+vfindSpec :: Spec
+vfindSpec = describe "vfind" $ do
+
+    it "should return an empty list for an empty graph" $ do
+
+        let g = GAC.empty
+
+        let vertVals = GAA.execute g $ do {
+            vs <- GAA.vfind (const True);
+            traverse GAA.value vs
+        }
+
+        length vertVals `shouldBe` 0
+
+    it "should return an empty list with a constantly false predicate" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let vertVals = GAA.execute g $ do {
+            vs <- GAA.vfind (const False);
+            traverse GAA.value vs
+        }
+
+        length vertVals `shouldBe` 0
+
+    it "should return all vertices with a constantly true predicate" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let vertVals = GAA.execute g $ do {
+            vs <- GAA.vfind (const True);
+            traverse GAA.value vs
+        }
+
+        vertVals `shouldMatchList` [1, 2, 3, 4]
+
+    it "should return only one vertex" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let vertVals = GAA.execute g $ do {
+            vs <- GAA.vfind (== 3);
+            traverse GAA.value vs
+        }
+
+        vertVals `shouldMatchList` [3]
+
+    it "should return only vertices with positive values" $ do
+
+        let g = GAC.isolated [-2, 4, 42, -42, 4816]
+
+        let vertVals = GAA.execute g $ do {
+            vs <- GAA.vfind (> 0);
+            traverse GAA.value vs
+        }
+
+        vertVals `shouldMatchList` [4, 42, 4816]
+
+efindSpec :: Spec
+efindSpec = describe "efind" $ do
+
+    it "should return an empty list for an empty graph" $ do
+
+        let g = GAC.empty
+
+        let edgeLabels = GAA.execute g $ do {
+            es <- GAA.efind (const True);
+            traverse GAA.label es
+        }
+
+        length edgeLabels `shouldBe` 0
+
+    it "should return an empty list for a graph with isolated vertices" $ do
+
+        let g = GAC.isolated [1, 2, 3]
+
+        let edgeLabels = GAA.execute g $ do {
+            es <- GAA.efind (const True);
+            traverse GAA.label es
+        }
+
+        length edgeLabels `shouldBe` 0
+
+    it "should return an empty list with a constantly false predicate" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex ();
+            b <- GAB.vertex ();
+
+            GAB.edge 1 a b;
+            GAB.edge 2 a b;
+            GAB.edge 3 a b;
+            GAB.edge 4 a b
+        }
+
+        let edgeLabels = GAA.execute g $ do {
+            es <- GAA.efind (const False);
+            traverse GAA.label es
+        }
+
+        length edgeLabels `shouldBe` 0
+
+    it "should return all edges with a constantly true predicate" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex ();
+            b <- GAB.vertex ();
+
+            GAB.edge 1 a b;
+            GAB.edge 2 a b;
+            GAB.edge 3 a b;
+            GAB.edge 4 a b
+        }
+
+        let edgeLabels = GAA.execute g $ do {
+            es <- GAA.efind (const True);
+            traverse GAA.label es
+        }
+
+        edgeLabels `shouldMatchList` [1, 2, 3, 4]
+
+    it "should return only one edge" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex ();
+            b <- GAB.vertex ();
+
+            GAB.edge 1 a b;
+            GAB.edge 2 a b;
+            GAB.edge 3 a b;
+            GAB.edge 4 a b
+        }
+
+        let edgeLabels = GAA.execute g $ do {
+            es <- GAA.efind (== 3);
+            traverse GAA.label es
+        }
+
+        edgeLabels `shouldMatchList` [3]
+
+    it "should return only edges with positive labels" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex ();
+            b <- GAB.vertex ();
+
+            GAB.edge (-3) a b;
+            GAB.edge (-42) a b;
+            GAB.edge 42 a b;
+            GAB.edge 5 a b;
+            GAB.edge 0 a b
+        }
+
+        let edgeLabels = GAA.execute g $ do {
+            es <- GAA.efind (> 0);
+            traverse GAA.label es
+        }
+
+        edgeLabels `shouldMatchList` [42, 5]
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor" $ do
@@ -458,3 +618,5 @@ spec = describe "Data.Graph.Abstract.Accessor" $ do
     targetSpec
     varraySpec
     earraySpec
+    vfindSpec
+    efindSpec
