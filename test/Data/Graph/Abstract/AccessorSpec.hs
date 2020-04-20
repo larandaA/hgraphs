@@ -155,6 +155,163 @@ degreeSpec = describe "degree" $ do
 
         degrees `shouldMatchList` [("a", 2), ("b", 1), ("c", 0)]
 
+edgesSpec :: Spec
+edgesSpec = describe "edges" $ do
+
+    it "should return an empty list for a graph with isolated vertices" $ do
+
+        let g = GAC.isolated [1..5]
+        let len = GAA.execute g $ do {
+            es <- GAA.edges;
+            pure (length es)
+        }
+
+        len `shouldBe` 0
+
+    it "should return all the edges" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+
+            GAB.edge' a b;
+            GAB.edge' a c;
+            GAB.edge' b c
+        }
+
+        let edges = GAA.execute g $ do {
+            es <- GAA.edges;
+            sourceVals <- traverse GAA.value (map GAA.source es);
+            targets <- traverse GAA.target es;
+            targetVals <- traverse GAA.value targets;
+            pure (zip sourceVals targetVals)
+        }
+
+        edges `shouldMatchList` [("a", "b"), ("a", "c"), ("b", "c")]
+
+outgoingSpec :: Spec
+outgoingSpec = describe "outgoing" $ do
+
+    it "should return an empty list for the only vertex in a trivial graph" $ do
+
+        let g = GAC.singleton ()
+        let numEdges = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            outs <- GAA.outgoing (head vs);
+            pure (length outs)
+        }
+
+        numEdges `shouldBe` 0
+
+    it "should return correct outgoing edges" $ do
+
+        let g = GAB.build $ do {
+            v0 <- GAB.vertex 0;
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
+
+            GAB.edge' v0 v1;
+            GAB.edge' v0 v2;
+            GAB.edge' v1 v2
+        }
+
+        let edges = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            outs <- traverse GAA.outgoing vs;
+            targets <- traverse (traverse GAA.target) outs;
+            targetVals <- traverse (traverse GAA.value) targets;
+            sourceVals <- traverse (traverse (GAA.value . GAA.source)) outs;
+            pure (zip (concat sourceVals) (concat targetVals))
+        }
+
+        edges `shouldMatchList` [(0, 1), (1, 2), (0, 2)]
+
+labelSpec :: Spec
+labelSpec = describe "label" $ do
+
+    it "should return a label of the only edge in a graph" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+
+            GAB.edge "ab" a b
+        }
+
+        let label = GAA.execute g $ do {
+            es <- GAA.edges;
+            GAA.label (head es)
+        }
+
+        label `shouldBe` "ab"
+
+    it "should return correct labels for all the edges" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+
+            GAB.edge "ab" a b;
+            GAB.edge "ac" a c;
+            GAB.edge "bc" b c
+        }
+
+        let edges = GAA.execute g $ do {
+            es <- GAA.edges;
+            sourceVals <- traverse GAA.value (map GAA.source es);
+            targets <- traverse GAA.target es;
+            targetVals <- traverse GAA.value targets;
+            labels <- traverse GAA.label es;
+            pure (zip3 sourceVals labels targetVals)
+        }
+
+        edges `shouldMatchList` [("a", "ab", "b"), ("a", "ac", "c"), ("b", "bc", "c")]
+
+targetSpec :: Spec
+targetSpec = describe "target" $ do
+
+    it "should return a target of the only edge in a graph" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+
+            GAB.edge' a b
+        }
+
+        let targetValue = GAA.execute g $ do {
+            es <- GAA.edges;
+            target <- GAA.target (head es);
+            GAA.value target
+        }
+
+        targetValue `shouldBe` "b"
+
+    it "should return correct targets for all the edges" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+
+            GAB.edge "ab" a b;
+            GAB.edge "ac" a c;
+            GAB.edge "bc" b c
+        }
+
+        let edges = GAA.execute g $ do {
+            es <- GAA.edges;
+            sourceVals <- traverse GAA.value (map GAA.source es);
+            targets <- traverse GAA.target es;
+            targetVals <- traverse GAA.value targets;
+            labels <- traverse GAA.label es;
+            pure (zip3 sourceVals labels targetVals)
+        }
+
+        edges `shouldMatchList` [("a", "ab", "b"), ("a", "ac", "c"), ("b", "bc", "c")]
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor" $ do
@@ -164,3 +321,7 @@ spec = describe "Data.Graph.Abstract.Accessor" $ do
     valueSpec
     successorsSpec
     degreeSpec
+    edgesSpec
+    outgoingSpec
+    labelSpec
+    targetSpec
