@@ -11,7 +11,7 @@ module Data.Graph.Abstract.Accessor
     , EArray, earray, eget, eset
     ) where
 
-import Control.Monad (join)
+import Control.Monad (join, filterM)
 import Control.Monad.ST (ST, runST)
 import qualified Data.Graph.Abstract as GA
 import Data.Graph.Abstract (Graph)
@@ -101,6 +101,9 @@ vset (Vertex i) a (VArray v) = liftST (VM.write v i a)
 vgraph :: VArray s a -> Accessor s e v (Graph e a)
 vgraph (VArray v) = Accessor $ \g -> fmap (\ls -> g { GAI.verts = ls } ) (V.freeze v)
 
+vfind :: (v -> Bool) -> Accessor s e v [Vertex s]
+vfind f = vertices >>= filterM (fmap f . value)
+
 newtype EArray s a = EArray (Vector (STVector s a))
 
 unearray :: EArray s a -> Vector (STVector s a)
@@ -123,3 +126,6 @@ egraph (EArray v) = Accessor $ \g -> do
     pure $ g { GAI.adjs = newAdjs (GAI.adjs g) v' }
   where
     newAdjs = V.zipWith (V.zipWith (\adj a -> adj { GAI.aVal = a }))
+
+efind :: (e -> Bool) -> Accessor s e v [Edge s]
+efind f = edges >>= filterM (fmap f . label)
