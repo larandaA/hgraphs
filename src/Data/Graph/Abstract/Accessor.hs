@@ -9,6 +9,7 @@ module Data.Graph.Abstract.Accessor
     , edges, label, source, target
     , VArray, varray, vget, vset
     , EArray, earray, eget, eset
+    , vfind, efind
     ) where
 
 import Control.Monad (join, filterM)
