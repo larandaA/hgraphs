@@ -372,6 +372,77 @@ varraySpec = describe "varray" $ do
 
         varrayValues `shouldMatchList` [(1, 1), (2, 4), (3, 9), (4, 16)]
 
+earraySpec :: Spec
+earraySpec = describe "earray" $ do
+
+    it "should be filled with default values" $ do
+
+        let g = GAC.path [1, 2, 3, 4]
+
+        let earrayValues = GAA.execute g $ do {
+            es <- GAA.edges;
+            earr <- GAA.earray 42;
+            traverse (GAA.eget earr) es
+        }
+
+        earrayValues `shouldBe` [42, 42, 42]
+
+    it "should change a value for the only edge in a graph" $ do
+
+        let g = GAC.path [1, 2]
+
+        let earrayValue = GAA.execute g $ do {
+            es <- GAA.edges;
+            earr <- GAA.earray 42;
+            GAA.eset earr (head es) 4816;
+            GAA.eget earr (head es)
+        }
+
+        earrayValue `shouldBe` 4816
+
+    it "should not change a value while setting the same as default value" $ do
+
+        let g = GAC.path [1, 2]
+
+        let earrayValue = GAA.execute g $ do {
+            es <- GAA.edges;
+            earr <- GAA.earray 42;
+            GAA.eset earr (head es) 42;
+            GAA.eget earr (head es)
+        }
+
+        earrayValue `shouldBe` 42
+
+    it "should contain different values for all edges" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex ();
+            b <- GAB.vertex ();
+            c <- GAB.vertex ();
+
+            GAB.edge "ab" a b;
+            GAB.edge "ac" a c;
+            GAB.edge "bc" b c;
+            GAB.edge "cb" c b
+        }
+
+        let earrayValues = GAA.execute g $ do {
+            es <- GAA.edges;
+            earr <- GAA.earray "";
+            forM_ es $ \e -> do {
+                label <- GAA.label e;
+                GAA.eset earr e (label ++ label);
+            };
+            labels <- traverse GAA.label es;
+            earrVals <- traverse (GAA.eget earr) es;
+            pure (zip labels earrVals)
+        }
+
+        earrayValues `shouldMatchList`
+            [ ("ab", "abab"), ("ac", "acac")
+            , ("bc", "bcbc"), ("cb", "cbcb")
+            ]
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor" $ do
@@ -386,3 +457,4 @@ spec = describe "Data.Graph.Abstract.Accessor" $ do
     labelSpec
     targetSpec
     varraySpec
+    earraySpec
