@@ -384,6 +384,17 @@ varraySpec = describe "varray" $ do
 earraySpec :: Spec
 earraySpec = describe "earray" $ do
 
+    it "should return graph without edges for graph without edges" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            earr <- GAA.earray 42;
+            GAA.egraph earr
+        }
+
+        length(GA.edges g') `shouldBe` 0
+
     it "should be filled with default values" $ do
 
         let g = GAC.path [1, 2, 3, 4]
@@ -425,9 +436,9 @@ earraySpec = describe "earray" $ do
     it "should contain different values for all edges" $ do
 
         let g = GAB.build $ do {
-            a <- GAB.vertex ();
-            b <- GAB.vertex ();
-            c <- GAB.vertex ();
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
 
             GAB.edge "ab" a b;
             GAB.edge "ac" a c;
@@ -435,21 +446,21 @@ earraySpec = describe "earray" $ do
             GAB.edge "cb" c b
         }
 
-        let earrayValues = GAA.execute g $ do {
+        let g' = GAA.execute g $ do {
             es <- GAA.edges;
             earr <- GAA.earray "";
             forM_ es $ \e -> do {
                 label <- GAA.label e;
                 GAA.eset earr e (label ++ label);
             };
-            labels <- traverse GAA.label es;
-            earrVals <- traverse (GAA.eget earr) es;
-            pure (zip labels earrVals)
+            GAA.egraph earr
         }
 
-        earrayValues `shouldMatchList`
-            [ ("ab", "abab"), ("ac", "acac")
-            , ("bc", "bcbc"), ("cb", "cbcb")
+        GA.edges (GA.zip g g') `shouldMatchList`
+            [ (("a", "a"), ("ab", "abab"), ("b", "b"))
+            , (("a", "a"), ("ac", "acac"), ("c", "c"))
+            , (("b", "b"), ("bc", "bcbc"), ("c", "c"))
+            , (("c", "c"), ("cb", "cbcb"), ("b", "b"))
             ]
 
 vfindSpec :: Spec
