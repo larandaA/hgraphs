@@ -316,6 +316,17 @@ targetSpec = describe "target" $ do
 varraySpec :: Spec
 varraySpec = describe "varray" $ do
 
+    it "should return an empty graph for an empty graph" $ do
+
+        let g = GAC.empty
+
+        let g' = GAA.execute g $ do {
+            varr <- GAA.varray 42;
+            GAA.vgraph varr
+        }
+
+        length(GA.vertices g') `shouldBe` 0
+
     it "should be filled with default values" $ do
 
         let g = GAC.isolated [1, 2, 3, 4]
@@ -358,19 +369,17 @@ varraySpec = describe "varray" $ do
 
         let g = GAC.isolated [1, 2, 3, 4]
 
-        let varrayValues = GAA.execute g $ do {
+        let g' = GAA.execute g $ do {
             vs <- GAA.vertices;
             varr <- GAA.varray 0;
             forM_ vs $ \v -> do {
                 val <- GAA.value v;
                 GAA.vset varr v (val * val);
             };
-            vals <- traverse GAA.value vs;
-            varrVals <- traverse (GAA.vget varr) vs;
-            pure (zip vals varrVals)
+            GAA.vgraph varr
         }
 
-        varrayValues `shouldMatchList` [(1, 1), (2, 4), (3, 9), (4, 16)]
+        GA.vertices (GA.zip g g') `shouldMatchList` [(1, 1), (2, 4), (3, 9), (4, 16)]
 
 earraySpec :: Spec
 earraySpec = describe "earray" $ do
