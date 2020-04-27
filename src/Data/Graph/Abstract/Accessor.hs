@@ -7,8 +7,8 @@ module Data.Graph.Abstract.Accessor
     , Vertex, Edge
     , vertices, value, outgoing, successors, degree
     , edges, label, source, target
-    , VArray, varray, vget, vset
-    , EArray, earray, eget, eset
+    , VArray, varray, vget, vset, vgraph
+    , EArray, earray, eget, eset, egraph
     , vfind, efind
     ) where
 
