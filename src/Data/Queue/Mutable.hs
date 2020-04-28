@@ -1,4 +1,10 @@
-module Data.Queue.Mutable where
+module Data.Queue.Mutable
+    ( STQueue
+    , newReserve, new
+    , empty, full
+    , capacity, size
+    , pop, push, drain
+    ) where
 
 import Control.Monad
 import Control.Monad.ST
