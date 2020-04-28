@@ -91,7 +91,7 @@ grow_ q = do
             el <- VM.read d' i
             VM.write d' (i + oldCap) el
         modifySTRef (qHead q) (+oldCap)
-        writeSTRef (qData q) d'
+    writeSTRef (qData q) d'
 
 push :: STQueue s e -> e -> ST s ()
 push q x = do

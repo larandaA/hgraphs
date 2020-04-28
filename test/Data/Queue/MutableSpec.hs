@@ -78,7 +78,7 @@ drainSpec = describe "drain" $ do
     it "should return list with elements in correct order after pops" $ do
 
         let list = runST $ do {
-            q <- Q.newReserve 4;
+            q <- Q.newReserve 1;
             Q.push q 2;
             Q.push q 42;
             Q.push q 7;
