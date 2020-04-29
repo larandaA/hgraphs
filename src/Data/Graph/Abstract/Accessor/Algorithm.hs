@@ -1,5 +1,5 @@
 module Data.Graph.Abstract.Accessor.Algorithm
-    ( distances
+    ( distances'
     ) where
 
 import Control.Monad
@@ -9,8 +9,8 @@ import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.Queue as Queue
 import Data.Maybe (isJust)
 
-distances :: [Vertex s] -> Accessor s e v (VArray s (Maybe Int))
-distances starts = do
+distances' :: [Vertex s] -> Accessor s e v (VArray s (Maybe Int))
+distances' starts = do
     distances <- varray Nothing
     queue <- Queue.new
 

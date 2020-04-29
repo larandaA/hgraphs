@@ -8,15 +8,15 @@ import qualified Data.Graph.Abstract.Common as GAC
 import Test.Hspec
 
 
-distancesSpec :: Spec
-distancesSpec = describe "distances" $ do
+distances'Spec :: Spec
+distances'Spec = describe "distances'" $ do
 
     it "should be Nothing for all vertices on empty list of start vertices" $ do
 
         let g = GAC.isolated [1, 2, 3, 4]
 
         let g' = GAA.execute g $ do {
-            distances <- Alg.distances [];
+            distances <- Alg.distances' [];
             GAA.vgraph distances
         }
 
@@ -28,7 +28,7 @@ distancesSpec = describe "distances" $ do
 
         let g' = GAA.execute g $ do {
             vs <- GAA.vertices;
-            distances <- Alg.distances vs;
+            distances <- Alg.distances' vs;
             GAA.vgraph distances
         }
 
@@ -40,7 +40,7 @@ distancesSpec = describe "distances" $ do
 
         let g' = GAA.execute g $ do {
             vs <- GAA.vfind (== 3);
-            distances <- Alg.distances vs;
+            distances <- Alg.distances' vs;
             GAA.vgraph distances
         }
 
@@ -55,7 +55,7 @@ distancesSpec = describe "distances" $ do
 
         let g' = GAA.execute g $ do {
             vs <- GAA.vfind (== 4);
-            distances <- Alg.distances vs;
+            distances <- Alg.distances' vs;
             GAA.vgraph distances
         }
 
@@ -82,7 +82,7 @@ distancesSpec = describe "distances" $ do
 
         let g' = GAA.execute g $ do {
             vs <- GAA.vfind (== 0);
-            distances <- Alg.distances vs;
+            distances <- Alg.distances' vs;
             GAA.vgraph distances
         }
 
@@ -95,4 +95,4 @@ distancesSpec = describe "distances" $ do
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor.Algorithm" $ do
-    distancesSpec
+    distances'Spec
