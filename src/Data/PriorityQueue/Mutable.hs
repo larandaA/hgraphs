@@ -73,25 +73,23 @@ left_ i = 2 * i + 1
 right_ :: Int -> Int
 right_ i = 2 * i + 2
 
-go_down_ :: STPriorityQueue s e -> Int -> ST s ()
-go_down_ q i = do
+goDown_ :: STPriorityQueue s e -> Int -> ST s ()
+goDown_ q i = do
     let l = left_ i
     let r = right_ i
     let less = (qLess q)
     s <- readSTRef (qSize q)
-    if (s <= l)
-        then pure ()
-        else do
-            d <- readSTRef (qData q)
-            lVal <- VM.read d l
-            let r' = if (s <= r) then l else r
-            rVal <- VM.read d r'
-            iVal <- VM.read d i
-            let (minPos, minVal) = if (lVal `less` rVal) then (l, lVal) else (r', rVal)
-            when (minVal `less` iVal) $ do
-                VM.write d i minVal
-                VM.write d minPos iVal
-                go_down_ q minPos
+    when (s > l) $ do
+        d <- readSTRef (qData q)
+        lVal <- VM.read d l
+        let r' = if (s <= r) then l else r
+        rVal <- VM.read d r'
+        iVal <- VM.read d i
+        let (minPos, minVal) = if (lVal `less` rVal) then (l, lVal) else (r', rVal)
+        when (minVal `less` iVal) $ do
+            VM.write d i minVal
+            VM.write d minPos iVal
+            goDown_ q minPos
 
 pop_ :: STPriorityQueue s e -> ST s e
 pop_ q = do
@@ -101,19 +99,19 @@ pop_ q = do
     last <- VM.read d (s - 1)
     VM.write d 0 last
     modifySTRef (qSize q) (subtract 1)
-    go_down_ q 0
+    goDown_ q 0
     pure top
 
 pop :: STPriorityQueue s e -> ST s e
 pop q = do
-    emp <- empty q
-    if emp
+    empty <- empty q
+    if empty
         then error "Priority queue is empty"
         else pop_ q
 
-go_up_ :: STPriorityQueue s e -> Int -> ST s ()
-go_up_ q 0 = pure ()
-go_up_ q i = do
+goUp_ :: STPriorityQueue s e -> Int -> ST s ()
+goUp_ q 0 = pure ()
+goUp_ q i = do
     d <- readSTRef (qData q)
     let less = (qLess q)
     let p = parent_ i
@@ -122,7 +120,7 @@ go_up_ q i = do
     when (iVal `less` pVal) $ do
         VM.write d i pVal
         VM.write d p iVal
-        go_up_ q p
+        goUp_ q p
 
 
 push_ :: STPriorityQueue s e -> e -> ST s ()
@@ -131,7 +129,7 @@ push_ q x = do
     d <- readSTRef (qData q)
     VM.write d s x
     modifySTRef (qSize q) (+ 1)
-    go_up_ q s
+    goUp_ q s
 
 grow_ :: STPriorityQueue s e -> ST s ()
 grow_ q = do
@@ -148,8 +146,8 @@ push q x = do
 
 drain :: STPriorityQueue s e -> ST s [e]
 drain q = do
-    qEmpty <- empty q
-    if qEmpty
+    empty <- empty q
+    if empty
         then return []
         else do
             el <- pop q
