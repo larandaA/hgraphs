@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Data.PriorityQueue.Mutable
     ( STPriorityQueue
     , newReserveWithLess, newWithLess
@@ -12,6 +14,7 @@ import Control.Monad
 import Control.Monad.ST
 import qualified Data.Vector.Mutable as VM
 import Data.STRef
+import Prelude hiding (last)
 
 data STPriorityQueue s e = STPriorityQueue
     { qSize :: STRef s Int
@@ -64,43 +67,33 @@ full q = do
     c <- capacity q
     return (s == c)
 
-parent_ :: Int -> Int
-parent_ i = (i - 1) `div` 2
-
-left_ :: Int -> Int
-left_ i = 2 * i + 1
-
-right_ :: Int -> Int
-right_ i = 2 * i + 2
-
-goDown_ :: STPriorityQueue s e -> Int -> ST s ()
+goDown_ :: STPriorityQueue s e -> Index -> ST s ()
 goDown_ q i = do
-    let l = left_ i
-    let r = right_ i
+    let l = left i
+    let r = right i
     let less = (qLess q)
-    s <- readSTRef (qSize q)
-    when (s > l) $ do
-        d <- readSTRef (qData q)
-        lVal <- VM.read d l
-        let r' = if (s <= r) then l else r
-        rVal <- VM.read d r'
-        iVal <- VM.read d i
-        let (minPos, minVal) = if (lVal `less` rVal) then (l, lVal) else (r', rVal)
+    lWithin <- within q l
+    when lWithin $ do
+        lVal <- get q l
+        rWithin <- within q r
+        let r' = if rWithin then r else l
+        rVal <- get q r'
+        iVal <- get q i
+        let (min, minVal) = if (lVal `less` rVal) then (l, lVal) else (r', rVal)
         when (minVal `less` iVal) $ do
-            VM.write d i minVal
-            VM.write d minPos iVal
-            goDown_ q minPos
+            set q i minVal
+            set q min iVal
+            goDown_ q min
 
 pop_ :: STPriorityQueue s e -> ST s e
 pop_ q = do
-    s <- readSTRef (qSize q)
-    d <- readSTRef (qData q)
-    top <- VM.read d 0
-    last <- VM.read d (s - 1)
-    VM.write d 0 last
+    topVal <- get q Top
+    last <- last q
+    lastVal <- get q last
+    set q Top lastVal
     modifySTRef (qSize q) (subtract 1)
-    goDown_ q 0
-    pure top
+    goDown_ q Top
+    pure topVal
 
 pop :: STPriorityQueue s e -> ST s e
 pop q = do
@@ -109,27 +102,17 @@ pop q = do
         then error "Priority queue is empty"
         else pop_ q
 
-goUp_ :: STPriorityQueue s e -> Int -> ST s ()
-goUp_ q 0 = pure ()
+goUp_ :: STPriorityQueue s e -> Index -> ST s ()
+goUp_ q Top = pure ()
 goUp_ q i = do
-    d <- readSTRef (qData q)
     let less = (qLess q)
-    let p = parent_ i
-    iVal <- VM.read d i
-    pVal <- VM.read d p
+    let p = parent i
+    iVal <- get q i
+    pVal <- get q p
     when (iVal `less` pVal) $ do
-        VM.write d i pVal
-        VM.write d p iVal
-        goUp_ q p
-
-
-push_ :: STPriorityQueue s e -> e -> ST s ()
-push_ q x = do
-    s <- readSTRef (qSize q)
-    d <- readSTRef (qData q)
-    VM.write d s x
-    modifySTRef (qSize q) (+ 1)
-    goUp_ q s
+        set q i pVal
+        set q p iVal
+        goUp_ q p    
 
 grow_ :: STPriorityQueue s e -> ST s ()
 grow_ q = do
@@ -142,7 +125,8 @@ push :: STPriorityQueue s e -> e -> ST s ()
 push q x = do
     isFull <- full q
     when isFull (grow_ q)
-    push_ q x
+    i <- append q x
+    goUp_ q i
 
 drain :: STPriorityQueue s e -> ST s [e]
 drain q = do
@@ -153,3 +137,44 @@ drain q = do
             el <- pop q
             els <- drain q
             return (el:els)
+
+newtype Index = Index Int
+
+parent :: Index -> Index
+parent (Index i) = Index $ (i - 1) `div` 2
+
+left :: Index -> Index
+left (Index i) = Index $ 2 * i + 1
+
+right :: Index -> Index
+right (Index i) = Index $ 2 * i + 2
+
+get :: STPriorityQueue s e -> Index -> ST s e
+get q (Index i) = do
+    d <- readSTRef (qData q)
+    VM.read d i
+
+set :: STPriorityQueue s e -> Index -> e -> ST s ()
+set q (Index i) x = do
+    d <- readSTRef (qData q)
+    VM.write d i x
+
+append :: STPriorityQueue s e -> e -> ST s Index
+append q x = do
+    s <- readSTRef (qSize q)
+    let i = Index s
+    set q i x
+    modifySTRef (qSize q) (+ 1)
+    pure i
+
+within :: STPriorityQueue s e -> Index -> ST s Bool
+within q (Index i) = do
+    s <- readSTRef (qSize q)
+    pure (i < s)
+
+last :: STPriorityQueue s e -> ST s Index
+last q = do
+    s <- readSTRef (qSize q)
+    pure $ Index (s - 1)
+
+pattern Top = Index 0
