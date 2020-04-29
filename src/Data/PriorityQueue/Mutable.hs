@@ -161,10 +161,9 @@ set q (Index i) x = do
 
 append :: STPriorityQueue s e -> e -> ST s Index
 append q x = do
-    s <- readSTRef (qSize q)
-    let i = Index s
-    set q i x
     modifySTRef (qSize q) (+ 1)
+    i <- last q
+    set q i x
     pure i
 
 within :: STPriorityQueue s e -> Index -> ST s Bool
