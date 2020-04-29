@@ -1,4 +1,5 @@
 import Test.Hspec
+import qualified Data.PriorityQueue.MutableSpec as PQ
 import qualified Data.Queue.MutableSpec as Q
 import qualified Data.Graph.AbstractSpec as GA
 import qualified Data.Graph.Abstract.AccessorSpec as GAA
@@ -10,6 +11,7 @@ import qualified Data.Graph.Abstract.TransformSpec as GAT
 
 main :: IO ()
 main = hspec $ do
+    PQ.spec
     Q.spec
     GA.spec
     GAA.spec
