@@ -1,11 +1,17 @@
 module Data.Graph.Abstract.Accessor.Algorithm.Dfs
     ( preorder, preorderFrom
     , postorder, postorderFrom
+    , dff
+    , acyclic, topsort
+    , components, scc
+    , bicolour, bipartite
     ) where
 
 import Control.Monad
 import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.Ref as Ref
+import Data.Maybe (isJust)
+import qualified Data.Vector.Mutable as MVector
 
 preorder :: a -> (Maybe (a, Edge s) -> Vertex s -> Accessor s e v a)
          -> Accessor s e v (VArray s a)
@@ -119,3 +125,71 @@ childrenLabels (e:es) labels = do
     vLabel <- vget labels v
     childrenLabels' <- childrenLabels es labels
     pure ((e, vLabel):childrenLabels')
+
+dff :: Accessor s e v (VArray s (Maybe (Vertex s)))
+dff = preorder Nothing f
+  where
+    f Nothing _ = pure Nothing
+    f (Just (_, e)) _ = pure $ Just (source e)
+
+acyclic :: Accessor s e v Bool
+acyclic = vfold (&&) True =<< postorder False f
+  where
+    f v _ es = pure (all (isJust . snd) es)
+
+topsort :: Accessor s e v (Maybe (VArray s Int))
+topsort = do
+    acyclic' <- acyclic
+    if acyclic'
+        then do
+            nextIdx <- Ref.new 0
+            Just <$> postorder 0 (f nextIdx)
+        else pure Nothing
+  where
+    f nextIdx _ _ _ = Ref.increment nextIdx
+
+components :: Accessor s e v (VArray s Int)
+components = do
+    nextCompId <- Ref.new 0
+    preorder 0 (f nextCompId)
+  where
+    f _ (Just (compId, _)) _ = pure compId
+    f nextCompId Nothing _ = Ref.increment nextCompId
+
+bicolour :: Accessor s e v (VArray s Int)
+bicolour = preorder 0 f
+  where
+    f Nothing _ = pure 0
+    f (Just (part, _)) _ = pure (1 - part)
+
+bipartite :: Accessor s e v Bool
+bipartite = do
+    colours <-  bicolour
+    vfold (&&) True =<< preorder True (f colours)
+  where
+    f colours _ v = do
+        vcol <- vget colours v
+        ncols <- traverse (vget colours) =<< successors v
+        pure $ all (/= vcol) ncols
+
+scc :: Accessor s e v (VArray s Int)
+scc = do
+    nextIdx <- Ref.new 0
+    indices <- postorder 0 (index nextIdx)
+    reordered <- reorder indices
+    nextCompId <- Ref.new 0
+    preorderFrom (reverse reordered) 0 (colour nextCompId)
+  where
+    index nextIdx _ _ _ = Ref.increment nextIdx
+    colour _ (Just (compId, _)) _ = pure compId
+    colour nextCompId Nothing _ = Ref.increment nextCompId
+
+reorder :: VArray s Int -> Accessor s e v [Vertex s]
+reorder indices = do
+    vs <- vertices
+    let n = length vs
+    reordered <- liftST $ MVector.new n
+    forM_ vs $ \v -> do
+        idx <- vget indices v
+        liftST $ MVector.write reordered idx v
+    liftST $ traverse (MVector.read reordered) [0..n - 1]
