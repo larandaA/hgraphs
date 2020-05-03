@@ -1,6 +1,6 @@
 module Data.Graph.Abstract.Accessor.Ref
     ( Ref
-    , new, get, set, modify
+    , new, get, set, modify, increment
     ) where
 
 import Data.Graph.Abstract.Accessor (Accessor, liftST)
@@ -20,3 +20,9 @@ set r x = liftST (STRef.writeSTRef r x)
 
 modify :: Ref s a -> (a -> a) -> Accessor s e v ()
 modify r f = liftST (STRef.modifySTRef r f)
+
+increment :: Num a => Ref s a -> Accessor s e v a
+increment r = do
+    x <- get r
+    modify r (+ 1)
+    pure x
