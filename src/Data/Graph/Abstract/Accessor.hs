@@ -104,8 +104,7 @@ vgraph (VArray v) = Accessor $ \g -> fmap (\ls -> g { GAI.verts = ls } ) (V.free
 
 vfold :: (a -> b -> b) -> b -> VArray s a -> Accessor s e v b
 vfold f z varr = do
-    vs <- vertices
-    vals <- traverse (vget varr) vs
+    vals <- traverse (vget varr) =<< vertices
     pure (foldr f z vals)
 
 vfind :: (v -> Bool) -> Accessor s e v [Vertex s]
@@ -136,8 +135,7 @@ egraph (EArray v) = Accessor $ \g -> do
 
 efold :: (a -> b -> b) -> b -> EArray s a -> Accessor s e v b
 efold f z earr = do
-    es <- edges
-    vals <- traverse (eget earr) es
+    vals <- traverse (eget earr) =<< edges
     pure (foldr f z vals)
 
 efind :: (e -> Bool) -> Accessor s e v [Edge s]
