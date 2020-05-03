@@ -7,8 +7,8 @@ module Data.Graph.Abstract.Accessor
     , Vertex, Edge
     , vertices, value, outgoing, successors, degree
     , edges, label, source, target
-    , VArray, varray, vget, vset, vgraph
-    , EArray, earray, eget, eset, egraph
+    , VArray, varray, vget, vset, vgraph, vfold
+    , EArray, earray, eget, eset, egraph, efold
     , vfind, efind
     ) where
 
@@ -102,6 +102,12 @@ vset (VArray v) (Vertex i) a = liftST (VM.write v i a)
 vgraph :: VArray s a -> Accessor s e v (Graph e a)
 vgraph (VArray v) = Accessor $ \g -> fmap (\ls -> g { GAI.verts = ls } ) (V.freeze v)
 
+vfold :: (a -> b -> b) -> b -> VArray s a -> Accessor s e v b
+vfold f z varr = do
+    vs <- vertices
+    vals <- traverse (vget varr) vs
+    pure (foldr f z vals)
+
 vfind :: (v -> Bool) -> Accessor s e v [Vertex s]
 vfind f = vertices >>= filterM (fmap f . value)
 
@@ -127,6 +133,12 @@ egraph (EArray v) = Accessor $ \g -> do
     pure $ g { GAI.adjs = newAdjs (GAI.adjs g) v' }
   where
     newAdjs = V.zipWith (V.zipWith (\adj a -> adj { GAI.aVal = a }))
+
+efold :: (a -> b -> b) -> b -> EArray s a -> Accessor s e v b
+efold f z earr = do
+    es <- edges
+    vals <- traverse (eget earr) es
+    pure (foldr f z vals)
 
 efind :: (e -> Bool) -> Accessor s e v [Edge s]
 efind f = edges >>= filterM (fmap f . label)

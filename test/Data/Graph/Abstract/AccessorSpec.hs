@@ -463,6 +463,68 @@ earraySpec = describe "earray" $ do
             , (("c", "c"), ("cb", "cbcb"), ("b", "b"))
             ]
 
+vfoldSpec :: Spec
+vfoldSpec = describe "vfold" $ do
+
+    it "should return a default value on empty graph" $ do
+
+        let g = GAC.empty
+
+        let sum = GAA.execute g $ do {
+            varr <- GAA.varray 42;
+            GAA.vfold (+) 0 varr
+        }
+
+        sum `shouldBe` 0
+
+    it "should return a number of vertices" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let sum = GAA.execute g $ do {
+            varr <- GAA.varray 1;
+            GAA.vfold (+) 0 varr
+        }
+
+        sum `shouldBe` 4
+
+efoldSpec :: Spec
+efoldSpec = describe "efold" $ do
+
+    it "should return a default value on empty graph" $ do
+
+        let g = GAC.empty
+
+        let sum = GAA.execute g $ do {
+            earr <- GAA.earray 42;
+            GAA.efold (+) 0 earr
+        }
+
+        sum `shouldBe` 0
+
+
+    it "should return a default value on graph without edges" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let sum = GAA.execute g $ do {
+            earr <- GAA.earray 42;
+            GAA.efold (+) 0 earr
+        }
+
+        sum `shouldBe` 0
+
+    it "should return a number of edges" $ do
+
+        let g = GAC.path [1, 2, 3, 4]
+
+        let sum = GAA.execute g $ do {
+            earr <- GAA.earray 1;
+            GAA.efold (+) 0 earr
+        }
+
+        sum `shouldBe` 3
+
 vfindSpec :: Spec
 vfindSpec = describe "vfind" $ do
 
@@ -638,5 +700,7 @@ spec = describe "Data.Graph.Abstract.Accessor" $ do
     targetSpec
     varraySpec
     earraySpec
+    vfoldSpec
+    efoldSpec
     vfindSpec
     efindSpec
