@@ -27,8 +27,10 @@ preorderFrom starts default' f = do
     labels <- varray default'
 
     forM_ starts $ \v -> do
-        vset visited v True
-        preorderRecursion Nothing v visited labels f
+        visited' <- vget visited v
+        unless visited' $ do
+            vset visited v True
+            preorderRecursion Nothing v visited labels f
 
     pure labels
 
@@ -64,8 +66,10 @@ postorderFrom starts default' f = do
     labels <- varray default'
 
     forM_ starts $ \v -> do
-        vset visited v True
-        postorderRecursion v visited stacked labels f
+        visited' <- vget visited v
+        unless visited' $ do
+            vset visited v True
+            postorderRecursion v visited stacked labels f
 
     pure labels
 
