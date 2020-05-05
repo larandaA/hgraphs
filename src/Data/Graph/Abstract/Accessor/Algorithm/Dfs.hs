@@ -3,7 +3,7 @@ module Data.Graph.Abstract.Accessor.Algorithm.Dfs
     , postorder, postorderFrom
     , dff
     , acyclic, topsort
-    , components
+    , components, connected
     , bicolour, bipartite
     ) where
 
