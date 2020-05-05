@@ -160,6 +160,14 @@ components = do
     f _ (Just (compId, _)) _ = pure compId
     f nextCompId Nothing _ = Ref.increment nextCompId
 
+connected :: Accessor s e c Bool
+connected = do
+    comps <- components
+    numComps <- vfold count 0 comps
+    pure (numComps <= 1)
+  where
+    count comp num = max (comp + 1) num
+
 bicolour :: Accessor s e v (VArray s Int)
 bicolour = preorder 0 f
   where
