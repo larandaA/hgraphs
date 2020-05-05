@@ -3,7 +3,7 @@ module Data.Graph.Abstract.Accessor.Algorithm.Dfs
     , postorder, postorderFrom
     , dff
     , acyclic, topsort
-    , components, scc
+    , components
     , bicolour, bipartite
     ) where
 
@@ -183,25 +183,3 @@ bipartite = do
         vcol <- vget colours v
         ncols <- traverse (vget colours) =<< successors v
         pure $ all (/= vcol) ncols
-
-scc :: Accessor s e v (VArray s Int)
-scc = do
-    nextIdx <- Ref.new 0
-    indices <- postorder 0 (index nextIdx)
-    reordered <- reorder indices
-    nextCompId <- Ref.new 0
-    preorderFrom (reverse reordered) 0 (colour nextCompId)
-  where
-    index nextIdx _ _ _ = Ref.increment nextIdx
-    colour _ (Just (compId, _)) _ = pure compId
-    colour nextCompId Nothing _ = Ref.increment nextCompId
-
-reorder :: VArray s Int -> Accessor s e v [Vertex s]
-reorder indices = do
-    vs <- vertices
-    let n = length vs
-    reordered <- liftST $ MVector.new n
-    forM_ vs $ \v -> do
-        idx <- vget indices v
-        liftST $ MVector.write reordered idx v
-    liftST $ traverse (MVector.read reordered) [0..n - 1]
