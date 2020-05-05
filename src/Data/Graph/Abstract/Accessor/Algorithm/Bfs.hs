@@ -1,5 +1,6 @@
 module Data.Graph.Abstract.Accessor.Algorithm.Bfs
     ( bfs, bfsFrom
+    , distances
     ) where
 
 import Control.Monad
@@ -59,3 +60,10 @@ bfsIteration queue visited labels f = do
             unless visited' $ do
                 vset visited successor True
                 Queue.push queue (Just (label', edge), successor)
+
+distances :: [Vertex s] -> Accessor s e v (VArray s (Maybe Int))
+distances starts = bfsFrom starts Nothing f
+  where
+    f Nothing _ = pure $ Just 0
+    f (Just (Just dist, _)) _ = pure $ Just (dist + 1)
+    f (Just (Nothing, _)) _ = error "Unreachable case was reached"
