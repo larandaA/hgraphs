@@ -1,6 +1,6 @@
 module Data.Graph.Abstract.Accessor.Algorithm.Bfs
     ( bfs, bfsFrom
-    , distances
+    , distances, paths
     ) where
 
 import Control.Monad
@@ -67,3 +67,9 @@ distances starts = bfsFrom starts Nothing f
     f Nothing _ = pure $ Just 0
     f (Just (Just dist, _)) _ = pure $ Just (dist + 1)
     f (Just (Nothing, _)) _ = error "Unreachable case was reached"
+
+paths :: [Vertex s] -> Accessor s e v (VArray s (Maybe (Edge s)))
+paths starts = bfsFrom starts Nothing f
+  where
+    f Nothing _ = pure Nothing
+    f (Just (_, e)) _ = pure $ Just e

@@ -173,9 +173,106 @@ distancesSpec = describe "distances" $ do
             , (4, Just 2)
             ]
 
+pathsSpec :: Spec
+pathsSpec = describe "paths" $ do
+
+    it "should be Nothing for all vertices on empty list of start vertices" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            preds <- Bfs.paths [];
+            preds' <- GAA.varray Nothing;
+            forM_ vs $ \v -> do {
+                pred <- GAA.vget preds v;
+                pred' <- traverse (GAA.value . GAA.source) pred;
+                GAA.vset preds' v pred';
+            };
+            GAA.vgraph preds'
+        }
+
+        GA.vertices g' `shouldMatchList` [Nothing, Nothing, Nothing, Nothing]
+
+    it "should be Nothing for all vertices if all vertices are start vertices" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            preds <- Bfs.paths vs;
+            preds' <- GAA.varray Nothing;
+            forM_ vs $ \v -> do {
+                pred <- GAA.vget preds v;
+                pred' <- traverse (GAA.value . GAA.source) pred;
+                GAA.vset preds' v pred';
+            };
+            GAA.vgraph preds'
+        }
+
+        GA.vertices g' `shouldMatchList` [Nothing, Nothing, Nothing, Nothing]
+
+    it "should be star center for rays of a star" $ do
+
+        let g = GAC.star 4 [1, 2, 3]
+
+        let g' = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            starts <- GAA.vfind (== 4);
+            preds <- Bfs.paths starts;
+            preds' <- GAA.varray Nothing;
+            forM_ vs $ \v -> do {
+                pred <- GAA.vget preds v;
+                pred' <- traverse (GAA.value . GAA.source) pred;
+                GAA.vset preds' v pred';
+            };
+            GAA.vgraph preds'
+        }
+
+        GA.vertices (GA.zip g g') `shouldMatchList`
+            [ (1, Just 4), (2, Just 4)
+            , (3, Just 4), (4, Nothing)
+            ]
+
+    it "should be the predecessors according to the shortest paths" $ do
+
+        let g = GAB.build $ do {
+            v0 <- GAB.vertex 0;
+            v1 <- GAB.vertex 1;
+            v2 <- GAB.vertex 2;
+            v3 <- GAB.vertex 3;
+            v4 <- GAB.vertex 4;
+
+            GAB.edge' v0 v1;
+            GAB.edge' v1 v2;
+            GAB.edge' v2 v4;
+            GAB.edge' v0 v3;
+            GAB.edge' v3 v4
+        }
+
+        let g' = GAA.execute g $ do {
+            vs <- GAA.vertices;
+            starts <- GAA.vfind (== 0);
+            preds <- Bfs.paths starts;
+            preds' <- GAA.varray Nothing;
+            forM_ vs $ \v -> do {
+                pred <- GAA.vget preds v;
+                pred' <- traverse (GAA.value . GAA.source) pred;
+                GAA.vset preds' v pred';
+            };
+            GAA.vgraph preds'
+        }
+
+        GA.vertices (GA.zip g g') `shouldMatchList`
+            [ (0, Nothing), (1, Just 0)
+            , (2, Just 1), (3, Just 0)
+            , (4, Just 3)
+            ]
+
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor.Algorithm.Bfs" $ do
     bfsFromSpec
     bfsSpec
     distancesSpec
+    pathsSpec
