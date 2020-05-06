@@ -525,6 +525,89 @@ efoldSpec = describe "efold" $ do
 
         sum `shouldBe` 3
 
+vbuildSpec :: Spec
+vbuildSpec = describe "vbuild" $ do
+
+    it "should work fine on empty graph" $ do
+
+        let g = GAC.empty
+
+        let g' = GAA.execute g $ do {
+            varr <- GAA.vbuild (const (pure 42));
+            GAA.vgraph varr
+        }
+
+        GA.numVertices g' `shouldBe` 0
+
+    it "should fill with constant value" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            varr <- GAA.vbuild (const (pure 42));
+            GAA.vgraph varr
+        }
+
+        GA.vertices g' `shouldMatchList` [42, 42, 42, 42]
+
+    it "should fill with incremented vertices values" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            varr <- GAA.vbuild (fmap (+ 1) . GAA.value);
+            GAA.vgraph varr
+        }
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [(1, 2), (2, 3), (3, 4), (4, 5)]
+
+ebuildSpec :: Spec
+ebuildSpec = describe "ebuild" $ do
+
+    it "should work fine on empty graph" $ do
+
+        let g = GAC.empty
+
+        let g' = GAA.execute g $ do {
+            earr <- GAA.ebuild (const (pure 42));
+            GAA.egraph earr
+        }
+
+        length (GA.edges g') `shouldBe` 0
+
+    it "should work fine on graph without edges" $ do
+
+        let g = GAC.isolated [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            earr <- GAA.ebuild (const (pure 42));
+            GAA.egraph earr
+        }
+
+        length (GA.edges g') `shouldBe` 0
+
+    it "should fill with constant value" $ do
+
+        let g = GAC.path [1, 2, 3, 4]
+
+        let g' = GAA.execute g $ do {
+            earr <- GAA.ebuild (const (pure 42));
+            GAA.egraph earr
+        }
+
+        GA.edges g' `shouldMatchList` [(1, 42, 2), (2, 42, 3), (3, 42, 4)]
+
+    it "should fill with incremented source values" $ do
+
+        let g = GAC.path [4, 3, 2, 1]
+
+        let g' = GAA.execute g $ do {
+            earr <- GAA.ebuild (fmap (+ 1) . GAA.value . GAA.source);
+            GAA.egraph earr
+        }
+
+        GA.edges g' `shouldMatchList` [(4, 5, 3), (3, 4, 2), (2, 3, 1)]
+
 vfindSpec :: Spec
 vfindSpec = describe "vfind" $ do
 
@@ -702,5 +785,7 @@ spec = describe "Data.Graph.Abstract.Accessor" $ do
     earraySpec
     vfoldSpec
     efoldSpec
+    vbuildSpec
+    ebuildSpec
     vfindSpec
     efindSpec

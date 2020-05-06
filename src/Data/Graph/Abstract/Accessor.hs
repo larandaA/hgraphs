@@ -7,12 +7,12 @@ module Data.Graph.Abstract.Accessor
     , Vertex, Edge
     , vertices, value, outgoing, successors, degree
     , edges, label, source, target
-    , VArray, varray, vget, vset, vgraph, vfold
-    , EArray, earray, eget, eset, egraph, efold
+    , VArray, varray, vbuild, vget, vset, vgraph, vfold
+    , EArray, earray, ebuild, eget, eset, egraph, efold
     , vfind, efind
     ) where
 
-import Control.Monad (join, filterM)
+import Control.Monad (join, filterM, forM_)
 import Control.Monad.ST (ST, runST)
 import qualified Data.Graph.Abstract as GA
 import Data.Graph.Abstract (Graph)
@@ -93,6 +93,17 @@ unvarray (VArray v) = v
 varray :: a -> Accessor s e v (VArray s a)
 varray a = Accessor $ \g -> fmap VArray (VM.replicate (GA.numVertices g) a)
 
+vbuild :: (Vertex s -> Accessor s e v a) -> Accessor s e v (VArray s a)
+vbuild f = do
+    varr <- init
+    vs <- vertices
+    forM_ vs $ \v -> do
+        val <- f v
+        vset varr v val
+    pure varr
+  where
+    init = Accessor $ \g -> VArray <$> (VM.new (GA.numVertices g))
+
 vget :: VArray s a -> Vertex s -> Accessor s e v a
 vget (VArray v) (Vertex i) = liftST (VM.read v i)
 
@@ -119,6 +130,18 @@ earray :: a -> Accessor s e v (EArray s a)
 earray a = Accessor $ \g -> (fmap (EArray . V.fromList) . sequence . map replicated . V.toList) (GAI.adjs g)
   where
     replicated v = VM.replicate (V.length v) a
+
+ebuild :: (Edge s -> Accessor s e v a) -> Accessor s e v (EArray s a)
+ebuild f = do
+    earr <- init
+    es <- edges
+    forM_ es $ \e -> do
+        val <- f e
+        eset earr e val
+    pure earr
+  where
+    init' v = VM.new (V.length v)
+    init = Accessor $ \g -> (fmap (EArray . V.fromList) . sequence . map init' . V.toList) (GAI.adjs g)
 
 eget :: EArray s a -> Edge s -> Accessor s e v a
 eget (EArray v) (Edge (Vertex i) j) = liftST (VM.read (v ! i) j)
