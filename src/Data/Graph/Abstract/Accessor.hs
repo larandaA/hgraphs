@@ -51,7 +51,7 @@ liftST = Accessor . const
 execute :: Graph e v -> (forall s. Accessor s e v a) -> a
 execute g ac = runST $ unaccessor' ac g
 
-newtype Vertex s = Vertex Int
+newtype Vertex s = Vertex Int deriving (Eq)
 
 unvertex :: Vertex s -> Int
 unvertex (Vertex i) = i
@@ -59,7 +59,7 @@ unvertex (Vertex i) = i
 data Edge s = Edge
     { source :: Vertex s
     , offset :: Int
-    }
+    } deriving (Eq)
 
 vertices :: Accessor s e v [Vertex s]
 vertices = Accessor $ \g -> (pure . map Vertex) [0..(GA.numVertices g) - 1]
