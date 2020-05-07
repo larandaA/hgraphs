@@ -227,3 +227,4 @@ maxflowSpec algorithm name = describe name $ do
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Accessor.Algorithm.MaxFlow" $ do
     maxflowSpec MaxFlow.edkarp "edkarp"
+    maxflowSpec MaxFlow.dinic "dinic"
