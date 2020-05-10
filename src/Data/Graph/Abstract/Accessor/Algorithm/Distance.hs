@@ -1,5 +1,5 @@
-module Data.Graph.Abstract.Accessor.Algorithm
-    ( distances
+module Data.Graph.Abstract.Accessor.Algorithm.Distance
+    ( dijkstra
     ) where
 
 import Control.Monad
@@ -11,8 +11,8 @@ import qualified Data.Graph.Abstract.Accessor.Queue as Queue
 import Data.Maybe (isJust)
 import Data.Ord (comparing)
 
-distances :: (Num a, Ord a) => [Vertex s] -> (e -> a) -> Accessor s e v (VArray s (Maybe a))
-distances starts cost = do
+dijkstra :: (Num a, Ord a) => [Vertex s] -> (e -> a) -> Accessor s e v (VArray s (Maybe a))
+dijkstra starts cost = do
     distances <- varray Nothing
     queue <- PQueue.newWithComp (comparing snd)
 
