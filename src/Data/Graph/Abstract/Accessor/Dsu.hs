@@ -14,7 +14,7 @@ data Dsu s = Dsu
 new :: Accessor s e v (Dsu s)
 new = do
     s <- varray 1
-    p <- vbuild (pure . id)
+    p <- vbuild pure
     pure $ Dsu { size = s, parent = p }
 
 find :: Dsu s -> Vertex s -> Accessor s e v (Vertex s)
