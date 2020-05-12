@@ -7,6 +7,7 @@ import qualified Data.Graph.Abstract.Accessor.Algorithm.BfsSpec as AccessorBfs
 import qualified Data.Graph.Abstract.Accessor.Algorithm.DfsSpec as AccessorDfs
 import qualified Data.Graph.Abstract.Accessor.Algorithm.DistanceSpec as AccessorDistance
 import qualified Data.Graph.Abstract.Accessor.Algorithm.MaxFlowSpec as AccessorMaxFlow
+import qualified Data.Graph.Abstract.Accessor.DsuSpec as AccessorDsu
 import qualified Data.Graph.Abstract.BuilderSpec as GAB
 import qualified Data.Graph.Abstract.CommonSpec as GAC
 import qualified Data.Graph.Abstract.InstanceSpec as GAI
@@ -22,6 +23,7 @@ main = hspec $ do
     AccessorDfs.spec
     AccessorDistance.spec
     AccessorMaxFlow.spec
+    AccessorDsu.spec
     GAB.spec
     GAC.spec
     GAI.spec
