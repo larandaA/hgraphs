@@ -17,7 +17,7 @@ dsuSpec = describe "dsu" $ do
 
         let g' = GAA.execute g $ do {
             dsu <- Dsu.new;
-            comps <- GAA.vbuild (join . fmap GAA.value . Dsu.find dsu);
+            comps <- GAA.vbuild (GAA.value <=< Dsu.find dsu);
             GAA.vgraph comps
         }
 
@@ -28,13 +28,13 @@ dsuSpec = describe "dsu" $ do
         let g = GAC.isolated [1, 2, 3, 4]
 
         let corr = GAA.execute g $ do {
-            v1 <- GAA.vfind (== 1);
+            v1 <- head <$> GAA.vfind (== 1);
 
             dsu <- Dsu.new;
-            Dsu.union dsu (head v1) (head v1);
+            Dsu.union dsu v1 v1;
 
-            rv1 <- Dsu.find dsu (head v1);
-            pure (rv1 == head v1)
+            rv1 <- Dsu.find dsu v1;
+            pure (rv1 == v1)
         }
 
         corr `shouldBe` True
@@ -44,14 +44,14 @@ dsuSpec = describe "dsu" $ do
         let g = GAC.isolated [1, 2, 3, 4]
 
         let corr = GAA.execute g $ do {
-            v1 <- GAA.vfind (== 1);
-            v4 <- GAA.vfind (== 4);
+            v1 <- head <$> GAA.vfind (== 1);
+            v4 <- head <$> GAA.vfind (== 4);
 
             dsu <- Dsu.new;
-            Dsu.union dsu (head v1) (head v4);
+            Dsu.union dsu v1 v4;
 
-            rv1 <- Dsu.find dsu (head v1);
-            rv4 <- Dsu.find dsu (head v4);
+            rv1 <- Dsu.find dsu v1;
+            rv4 <- Dsu.find dsu v4;
             pure (rv1 == rv4)
         }
 
@@ -62,18 +62,18 @@ dsuSpec = describe "dsu" $ do
         let g = GAC.isolated [1, 2, 3, 4]
 
         let corr = GAA.execute g $ do {
-            v1 <- GAA.vfind (== 1);
-            v2 <- GAA.vfind (== 2);
-            v3 <- GAA.vfind (== 3);
-            v4 <- GAA.vfind (== 4);
+            v1 <- head <$> GAA.vfind (== 1);
+            v2 <- head <$> GAA.vfind (== 2);
+            v3 <- head <$> GAA.vfind (== 3);
+            v4 <- head <$> GAA.vfind (== 4);
 
             dsu <- Dsu.new;
-            Dsu.union dsu (head v1) (head v2);
-            Dsu.union dsu (head v3) (head v1);
-            Dsu.union dsu (head v4) (head v2);
+            Dsu.union dsu v1 v2;
+            Dsu.union dsu v3 v1;
+            Dsu.union dsu v4 v2;
 
-            rv3 <- Dsu.find dsu (head v3);
-            rv4 <- Dsu.find dsu (head v4);
+            rv3 <- Dsu.find dsu v3;
+            rv4 <- Dsu.find dsu v4;
             pure (rv3 == rv4)
         }
 
