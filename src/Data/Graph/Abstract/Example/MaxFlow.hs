@@ -7,10 +7,18 @@ import Data.Graph.Abstract.Transform
 import Data.Graph.Abstract
 import Data.Maybe (isJust)
 
-available :: (Int, Int) -> Int
-available (cap, flow) = cap - flow
+data Edge = Edge
+    { capacity :: Int
+    , flow :: Int
+    }
 
-findPath :: (v1 -> Bool) -> (v1 -> Bool) -> Graph (Int, Int) v1 -> Graph (Int, Int) (Maybe (Int, v1), v1)
+available :: Edge -> Int
+available e = capacity e - flow e
+
+push :: Int -> Edge -> Edge
+push c e = e { flow = flow e + c }
+
+findPath :: (v -> Bool) -> (v -> Bool) -> Graph Edge v -> Graph Edge (Maybe (Int, v), v)
 findPath isSource isSink = transformu isSource backtrack (Nothing,)
   where
     backtrack v [] = (Nothing, v)
@@ -19,44 +27,41 @@ findPath isSource isSink = transformu isSource backtrack (Nothing,)
         Nothing | otherwise -> backtrack v chs
         Just (c, _) -> (Just (min c (available e), u), v)
 
-propogate :: (v1 -> Bool) -> Graph (Int, Int) (Maybe (Int, v1), v1) -> Graph (Int, Int) (Maybe (Int, v1), v1)
-propogate isSource = transformd (isSource . snd) descend id
+propogatePath :: (v -> Bool) -> Graph Edge (Maybe (Int, v), v) -> Graph Edge (Maybe (Int, v), v)
+propogatePath isSource = transformd (isSource . snd) descend id
   where
     descend [] pv = pv
     descend _ (Nothing, v) = (Nothing, v)
     descend (((Nothing, _), _):preds) pv = descend preds pv
     descend (((Just (c, _), _), _):preds) (Just (_, u), v) = (Just (c, u), v)
 
-push' :: Int -> (Int, Int) -> (Int, Int)
-push' c (cap, flow) = (cap, flow + c)
-
-push :: (Eq v1) => Graph (Int, Int) (Maybe (Int, v1), v1) ->  Graph (Int, Int) (Maybe (Int, v1), v1)
-push = emapc reflow
+pushPath :: (Eq v) => Graph Edge (Maybe (Int, v), v) ->  Graph Edge (Maybe (Int, v), v)
+pushPath = emapc reflow
   where
     reflow (Nothing, _) e (Nothing, _) = e
     reflow (Just (c, u), v) e (Nothing, v')
-        | u == v' = push' c e
+        | u == v' = push c e
         | otherwise = e
     reflow (Nothing, v) e (Just (c', u'), v')
-        | u' == v = push' (-c') e
+        | u' == v = push (-c') e
         | otherwise = e
     reflow (Just (c, u), v) e (Just (c', u'), v')
-        | u == v' = push' c e
-        | u' == v = push' (-c') e
+        | u == v' = push c e
+        | u' == v = push (-c') e
         | otherwise = e
 
-reachable :: Graph (Int, Int) (Maybe (Int, v1), v1) -> Bool
+reachable :: Graph Edge (Maybe (Int, v), v) -> Bool
 reachable = or . vmap (isJust . fst)
 
-buildPath :: (Eq v1) => (v1 -> Bool) -> (v1 -> Bool) -> Graph (Int, Int) v1 -> Graph (Int, Int) (Maybe (Int, v1), v1)
-buildPath isSource isSink = propogate isSource . findPath isSource isSink
+buildPath :: (Eq v) => (v -> Bool) -> (v -> Bool) -> Graph Edge v -> Graph Edge (Maybe (Int, v), v)
+buildPath isSource isSink = propogatePath isSource . findPath isSource isSink
 
-unmark :: Graph (Int, Int) (Maybe (Int, v1), v1) -> Graph (Int, Int) v1
+unmark :: Graph Edge (Maybe (Int, v), v) -> Graph Edge v
 unmark = vmap snd
 
-maxFlow :: (Eq v1) => (v1 -> Bool) -> (v1 -> Bool) -> Graph (Int, Int) v1 -> Graph (Int, Int) v1
+maxFlow :: (Eq v) => (v -> Bool) -> (v -> Bool) -> Graph Edge v -> Graph Edge v
 maxFlow isSource isSink g
-    | reachable g' = maxFlow isSource isSink . unmark . push $ g'
+    | reachable g' = maxFlow isSource isSink . unmark . pushPath $ g'
     | otherwise = unmark g'
   where
     g' = buildPath isSource isSink g
