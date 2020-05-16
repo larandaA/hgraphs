@@ -201,7 +201,7 @@ dffSpec = describe "dff" $ do
             values <- GAA.varray Nothing;
             forM_ vs $ \v -> do {
                 pred <- GAA.vget preds v;
-                pred' <- traverse GAA.value pred;
+                pred' <- traverse (GAA.value . GAA.source) pred;
                 GAA.vset values v pred'
             };
             GAA.vgraph values
@@ -219,7 +219,7 @@ dffSpec = describe "dff" $ do
             values <- GAA.varray Nothing;
             forM_ vs $ \v -> do {
                 pred <- GAA.vget preds v;
-                pred' <- traverse GAA.value pred;
+                pred' <- traverse (GAA.value . GAA.source) pred;
                 GAA.vset values v pred'
             };
             GAA.vgraph values

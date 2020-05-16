@@ -130,11 +130,11 @@ childrenLabels (e:es) labels = do
     childrenLabels' <- childrenLabels es labels
     pure ((e, vLabel):childrenLabels')
 
-dff :: Accessor s e v (VArray s (Maybe (Vertex s)))
+dff :: Accessor s e v (VArray s (Maybe (Edge s)))
 dff = preorder Nothing f
   where
     f Nothing _ = pure Nothing
-    f (Just (_, e)) _ = pure $ Just (source e)
+    f (Just (_, e)) _ = pure $ Just e
 
 acyclic :: Accessor s e v Bool
 acyclic = vfold (&&) True =<< postorder False f
