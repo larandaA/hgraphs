@@ -1,12 +1,16 @@
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+
 module Data.Graph.Abstract.Internal
     ( Node, Edge(..), Adj(..)
     , Graph(..), Graph',
     buildFromList
     ) where
 
+import Control.DeepSeq (NFData)
 import Control.Monad
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
+import GHC.Generics (Generic)
 
 type Node = Int
 
@@ -25,12 +29,12 @@ eAdj_ e = Adj
 data Adj e = Adj
     { aTo :: Node
     , aVal :: e
-    }
+    } deriving (Generic, NFData)
 
 data Graph e v = Graph
     { verts :: V.Vector v
     , adjs :: V.Vector (V.Vector (Adj e))
-    }
+    } deriving (Generic, NFData)
 
 type Graph' = Graph ()
 
