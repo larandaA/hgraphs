@@ -10,7 +10,6 @@ module Data.Graph.Abstract.Accessor.Algorithm.MaxFlow
 
 import Control.Monad
 import Control.Monad.Loops (whileM_)
-import Control.Monad.ST (ST)
 import Data.Graph.Abstract.Accessor
 import Data.Graph.Abstract.Accessor.Queue (Queue)
 import qualified Data.Graph.Abstract.Accessor.Queue as Queue

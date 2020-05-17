@@ -5,11 +5,9 @@ module Data.Graph.Abstract.Accessor.Algorithm.Bfs
 
 import Control.Monad
 import Control.Monad.Loops (whileM_)
-import Control.Monad.ST (ST)
 import Data.Graph.Abstract.Accessor
 import Data.Graph.Abstract.Accessor.Queue (Queue)
 import qualified Data.Graph.Abstract.Accessor.Queue as Queue
-import Data.Maybe (isJust)
 
 bfsFrom :: [Vertex s] -> a
         -> (Maybe (a, Edge s) -> Vertex s -> Accessor s e v a)

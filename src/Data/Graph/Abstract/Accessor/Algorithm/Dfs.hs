@@ -11,7 +11,6 @@ import Control.Monad
 import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.Ref as Ref
 import Data.Maybe (isJust)
-import qualified Data.Vector.Mutable as MVector
 
 preorder :: a -> (Maybe (a, Edge s) -> Vertex s -> Accessor s e v a)
          -> Accessor s e v (VArray s a)
