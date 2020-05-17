@@ -4,7 +4,6 @@ module Data.Graph.Abstract.Accessor.Algorithm.Mst
 
 import Control.Monad
 import Control.Monad.Loops (whileM_)
-import Control.Monad.ST (ST)
 import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.PQueue as PQueue
 import qualified Data.Graph.Abstract.Accessor.Ref as Ref
