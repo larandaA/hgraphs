@@ -33,6 +33,7 @@ build (Builder builder) =
         , gbsEdges = []
         }
 
+{-# INLINE vertex #-}
 vertex :: v -> Builder s e v (Vertex s)
 vertex v = Builder $ do
     state <- State.get
@@ -42,6 +43,7 @@ vertex v = Builder $ do
         }
     pure (Vertex (gbsCount state))
 
+{-# INLINE edge #-}
 edge :: e -> Vertex s -> Vertex s -> Builder s e v ()
 edge l (Vertex v) (Vertex u) = Builder $ do
     state <- State.get
@@ -55,5 +57,6 @@ edge l (Vertex v) (Vertex u) = Builder $ do
         , GAI.eVal = l
         }
 
+{-# INLINE edge' #-}
 edge' :: Vertex s -> Vertex s -> Builder s () v ()
 edge' = edge ()

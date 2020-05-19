@@ -20,6 +20,7 @@ data Edge e = Edge
     , eVal :: e
     }
 
+{-# INLINE eAdj_ #-}
 eAdj_ :: Edge e -> Adj e
 eAdj_ e = Adj
     { aTo = eTo e

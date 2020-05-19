@@ -8,6 +8,7 @@ import Data.Graph.Abstract (Graph)
 import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.Algorithm.Bfs as Bfs
 
+{-# INLINE bfsF #-}
 bfsF :: (Maybe (a, e) -> v -> a)
      -> Maybe (a, Edge s) -> Vertex s -> Accessor s e v a
 bfsF f Nothing v = fmap (f Nothing) (value v)

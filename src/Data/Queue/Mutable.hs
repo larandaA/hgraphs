@@ -18,7 +18,7 @@ data STQueue s e = STQueue
     , qData :: STRef s (VM.STVector s e)
     }
 
-
+{-# INLINE newReserve #-}
 newReserve :: Int -> ST s (STQueue s e)
 newReserve n = do
     d <- VM.new n
@@ -27,20 +27,24 @@ newReserve n = do
     t <- newSTRef 0
     return (STQueue h t d')
 
+{-# INLINE new #-}
 new :: ST s (STQueue s e)
 new = newReserve 8
 
+{-# INLINE empty #-}
 empty :: STQueue s e -> ST s Bool
 empty q = do
     h <- readSTRef (qHead q)
     t <- readSTRef (qTail q)
     return (h == t)
 
+{-# INLINE capacity #-}
 capacity :: STQueue s e -> ST s Int
 capacity q = do
     d <- readSTRef (qData q)
     return (VM.length d)
 
+{-# INLINE size #-}
 size :: STQueue s e -> ST s Int
 size q = do
     h <- readSTRef (qHead q)
@@ -50,12 +54,14 @@ size q = do
         then return (t - h)
         else return (c - h + t)
 
+{-# INLINE full #-}
 full :: STQueue s e -> ST s Bool
 full q = do
     s <- size q
     c <- capacity q
     return (s + 1 == c)
 
+{-# INLINE nextIndex_ #-}
 nextIndex_ :: Int -> Int -> Int
 nextIndex_ s i = (i + 1) `mod` s
 
@@ -93,6 +99,7 @@ grow_ q = do
         modifySTRef (qHead q) (+oldCap)
     writeSTRef (qData q) d'
 
+{-# INLINE push #-}
 push :: STQueue s e -> e -> ST s ()
 push q x = do
     isFull <- full q

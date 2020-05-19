@@ -102,12 +102,12 @@ postorderRecursion v visited stacked labels f = do
 
     vset stacked v False
 
+{-# INLINE parentLabel #-}
 parentLabel :: Maybe (Edge s) -> VArray s a -> Accessor s e v (Maybe (a, Edge s))
 parentLabel Nothing _ = pure Nothing
 parentLabel (Just e) labels = do
-    let v = source e
-    vLabel <- vget labels v
-    pure (Just (vLabel, e))
+    label <- vget labels (source e)
+    pure (Just (label, e))
 
 backLabels :: [Edge s] -> VArray s a -> VArray s Bool -> Accessor s e v [(Edge s, Maybe a)]
 backLabels [] _ _ = pure []

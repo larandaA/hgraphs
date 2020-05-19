@@ -20,6 +20,7 @@ type Capacity = Int
 type Flow = Int
 data FlowEdge s = In (Edge s) | Out (Edge s)
 
+{-# INLINE unflow #-}
 unflow :: FlowEdge s -> Edge s
 unflow (In edge) = edge
 unflow (Out edge) = edge
@@ -41,6 +42,7 @@ capacities :: (Edge s -> Accessor s e v Capacity)
            -> Accessor s e v (EArray s (Capacity, Flow))
 capacities capacity = ebuild (fmap (, 0) . capacity)
 
+{-# INLINE available #-}
 available :: EArray s (Capacity, Flow) -> FlowEdge s
           -> Accessor s e v Capacity
 available capacities (In edge) = do
@@ -50,6 +52,7 @@ available capacities (Out edge) = do
     (capacity, flow) <- eget capacities edge
     pure (capacity - flow)
 
+{-# INLINE push #-}
 push :: EArray s (Capacity, Flow) -> Flow -> FlowEdge s
      -> Accessor s e v ()
 push capacities pushed (In edge) = do
@@ -68,10 +71,12 @@ pushThrough capacities path = do
     traverse (push capacities pushed) path
     pure ()
 
+{-# INLINE fsource #-}
 fsource :: FlowEdge s -> Accessor s e v (Vertex s)
 fsource (In edge) = target edge
 fsource (Out edge) = pure (source edge)
 
+{-# INLINE ftarget #-}
 ftarget :: FlowEdge s -> Accessor s e v (Vertex s)
 ftarget (In edge) = pure (source edge)
 ftarget (Out edge) = target edge

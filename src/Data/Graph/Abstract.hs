@@ -15,9 +15,11 @@ import qualified Data.Vector.Mutable as VM
 import Data.Vector ((!))
 import Prelude hiding (zip)
 
+{-# INLINE numVertices #-}
 numVertices :: Graph e v -> Int
 numVertices = V.length . verts
 
+{-# INLINE vertices #-}
 vertices :: Graph e v -> [v]
 vertices = V.toList . verts
 
@@ -26,12 +28,15 @@ edges g = V.toList . V.concat . V.toList . V.imap toTuples . adjs $ g
   where
     toTuples i = V.map (\adj -> ((verts g) ! i, aVal adj, (verts g) ! (aTo adj)))
 
+{-# INLINE vmap #-}
 vmap :: (v1 -> v2) -> Graph e v1 -> Graph e v2
 vmap f g = g { verts = V.map f (verts g) }
 
+{-# INLINE emap #-}
 emap :: (e1 -> e2) -> Graph e1 v -> Graph e2 v
 emap f g = g { adjs = V.map (V.map (\adj -> adj { aVal = f (aVal adj) })) (adjs g) }
 
+{-# INLINE emapc #-}
 emapc :: (v -> e1 -> v -> e2) -> Graph e1 v -> Graph e2 v
 emapc f g = g { adjs = V.imap (\v -> V.map (bAdj v)) (adjs g) }
   where
@@ -63,5 +68,6 @@ preds g = g { verts = V.map (V.toList . V.map adjToPred) . adjs . transpose $ g 
   where
     adjToPred adj = (verts g ! (aTo adj), aVal adj)
 
+{-# INLINE degree #-}
 degree :: Graph e v -> Graph e Int
 degree = vmap length . succs

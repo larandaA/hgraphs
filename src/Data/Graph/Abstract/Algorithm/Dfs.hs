@@ -12,6 +12,7 @@ import Data.Graph.Abstract (Graph)
 import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.Algorithm.Dfs as Dfs
 
+{-# INLINE preorderF #-}
 preorderF :: (Maybe (a, e) -> v -> a)
           -> Maybe (a, Edge s) -> Vertex s -> Accessor s e v a
 preorderF f Nothing v = fmap (f Nothing) (value v)
@@ -28,6 +29,7 @@ preorderFrom isStart default' f g = execute g $ do
     vs <- vfind isStart
     vgraph =<< Dfs.preorderFrom vs default' (preorderF f)
 
+{-# INLINE postorderF #-}
 postorderF :: (v -> [(e, a)] -> [(e, Maybe a)] -> a)
            -> Vertex s -> [(Edge s, a)] -> [(Edge s, Maybe a)] -> Accessor s e v a
 postorderF f v children succs = do
