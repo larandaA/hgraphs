@@ -1,82 +1,66 @@
+{-# LANGUAGE TupleSections #-}
+
 module Data.Graph.Abstract.Transform
     ( transformu, transformd
     ) where
 
+import Control.Applicative
 import Control.Monad
-import Control.Monad.ST
-import Data.Graph.Abstract.Internal
-import qualified Data.Graph.Abstract as GA
-import qualified Data.List as L
-import qualified Data.Vector as V
-import qualified Data.Vector.Mutable as VM
-import Data.Vector ((!))
-import Data.STRef
-import qualified Data.Queue.Mutable as QM
+import Data.Graph.Abstract (Graph)
+import Data.Graph.Abstract.Accessor
+import qualified Data.Graph.Abstract.Accessor.Algorithm.Bfs as Bfs
+import qualified Data.Graph.Abstract.Accessor.Ref as Ref
+import qualified Data.Vector.Mutable as MVector
 
-bfs_ :: [Node] -> Graph e v -> (V.Vector Node, V.Vector Int, V.Vector Node)
-bfs_ vs g = runST $ do
-    q <- QM.new
-    ordToV <- QM.new
-    vToOrd <- VM.replicate n n
-    pred <- VM.replicate n n
-    inQ <- VM.replicate n False
-    curOrd <- newSTRef 0
-    mapM_ (QM.push q) vs
-    mapM_ (\v -> VM.write inQ v True) vs
-    loop q ordToV vToOrd pred curOrd inQ
-    ordToVList <- QM.drain ordToV
-    vToOrdList <- mapM (VM.read vToOrd) [0..(n - 1)]
-    predList <- mapM (VM.read pred) [0..(n - 1)]
-    return (V.fromList ordToVList, V.fromList vToOrdList, V.fromList predList)
+bfs :: (v -> Bool) -> Accessor s e v (VArray s (Maybe Int, Maybe (Edge s)))
+bfs isStart = do
+    vs <- vfind isStart
+    nextIdx <- Ref.new 0
+    Bfs.bfsFrom vs (Nothing, Nothing) (f nextIdx)
   where
-    n = GA.numVertices g
-    loop q ordToV vToOrd pred curOrd inQ = do
-        qEmpty <- QM.empty q
-        if qEmpty
-            then return ()
-            else do
-                v <- QM.pop q
-                QM.push ordToV v
-                ord <- readSTRef curOrd
-                VM.write vToOrd v ord
-                modifySTRef curOrd (+ 1)
-                V.forM_ ((adjs g) ! v) $ \adjU -> do
-                    uInQ <- VM.read inQ (aTo adjU)
-                    when (not uInQ) $ do
-                        QM.push q (aTo adjU)
-                        VM.write pred (aTo adjU) v
-                        VM.write inQ (aTo adjU) True
-                loop q ordToV vToOrd pred curOrd inQ
+    f nextIdx Nothing _ = (, Nothing) <$> fmap Just (Ref.increment nextIdx)
+    f nextIdx (Just (_, e)) _ = (, Just e) <$> fmap Just (Ref.increment nextIdx)
+
+reorder :: VArray s (Maybe Int) -> Accessor s e v [Vertex s]
+reorder indices = do
+    vs <- vertices
+    ms <- vfold mmax Nothing indices
+    case ms of
+        Nothing -> pure []
+        (Just s) -> do
+            reordered <- liftST $ MVector.new (s + 1)
+            forM_ vs $ \v -> do
+                midx <- vget indices v
+                case midx of
+                    Nothing -> pure ()
+                    (Just idx) -> liftST (MVector.write reordered idx v)
+            liftST $ traverse (MVector.read reordered) [0..s]
+  where
+    mmax mx my = (max <$> mx <*> my) <|> mx <|> my
 
 transformu :: (v1 -> Bool) -> (v1 -> [(e, v2)] -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
-transformu isStart f defaultVal g = g { verts = vs }
-  where
-    n = GA.numVertices g
-    startNodes = V.toList. V.map fst . V.filter (isStart . snd) . V.imap (,) . verts $ g
-    (ordToV, vToOrd, pred) = bfs_ startNodes g
-    vs = V.create $ do
-        vsV <- VM.new n
-        V.forM_ (V.reverse ordToV) $ \v -> do
-            let aChildren = V.toList . V.filter (\adj -> (pred ! (aTo adj)) == v) $ (adjs g ! v)
-            bVals <- mapM (VM.read vsV . aTo) aChildren
-            let bChildren = L.zip (L.map aVal aChildren) bVals
-            VM.write vsV v (f (verts g ! v) bChildren)
-        flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
-        return vsV
+transformu isStart f default' g = execute g $ do
+    tree <- bfs isStart
+    values <- vbuild (fmap default' . value)
+    vs <- reorder =<< vbuild (fmap fst . vget tree)
+    forM_ (reverse vs) $ \v -> do
+        value' <- value v
+        edges <- filterM (\e -> ((== Just e) . snd) <$> (vget tree =<< target e)) =<< outgoing v
+        chs <- traverse (\e -> (,) <$> label e <*> (vget values =<< target e)) edges
+        vset values v (f value' chs)
+    vgraph values
+
 
 transformd :: (v1 -> Bool) -> ([(v2, e)] -> v1 -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
-transformd isStart f defaultVal g = g { verts = vs }
+transformd isStart f default' g = execute g $ do
+    tree <- bfs isStart
+    values <- vbuild (fmap default' . value)
+    vs <- reorder =<< vbuild (fmap fst . vget tree)
+    forM_ vs $ \v -> do
+        pred' <- (pred values) =<< vget tree v
+        value' <- value v
+        vset values v (f pred' value')
+    vgraph values
   where
-    n = GA.numVertices g
-    g' = GA.transpose g
-    startNodes = V.toList. V.map fst . V.filter (isStart . snd) . V.imap (,) . verts $ g
-    (ordToV, vToOrd, pred) = bfs_ startNodes g
-    vs = V.create $ do
-        vsV <- VM.new n
-        V.forM_ ordToV $ \v -> do
-            let aParents = V.toList . V.filter (\adj -> (pred ! v) == (aTo adj)) $ (adjs g' ! v)
-            bVals <- mapM (VM.read vsV . aTo) aParents
-            let bParents = L.zip bVals (L.map aVal aParents)
-            VM.write vsV v (f bParents (verts g ! v))
-        flip V.imapM_ vToOrd $ \v ordV -> when (ordV == n) (VM.write vsV v (defaultVal (verts g ! v)))
-        return vsV
+    pred _ (_, Nothing) = pure []
+    pred values (_, Just e) = fmap pure $ (,) <$> vget values (source e) <*> label e
