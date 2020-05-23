@@ -27,8 +27,8 @@ findPath isSource isSink = transformu' isSource ((> 0) . available) backtrack (N
         Nothing | otherwise -> backtrack v chs
         Just (c, _) -> (Just (min c (available e), u), v)
 
-propogatePath :: (v -> Bool) -> Graph Edge (Maybe (Int, v), v) -> Graph Edge (Maybe (Int, v), v)
-propogatePath isSource = transformd' (isSource . snd) ((> 0) . available) descend id
+propagatePath :: (v -> Bool) -> Graph Edge (Maybe (Int, v), v) -> Graph Edge (Maybe (Int, v), v)
+propagatePath isSource = transformd' (isSource . snd) ((> 0) . available) descend id
   where
     descend [] pv = pv
     descend _ (Nothing, v) = (Nothing, v)
@@ -54,7 +54,7 @@ reachable :: Graph Edge (Maybe (Int, v), v) -> Bool
 reachable = or . vmap (isJust . fst)
 
 buildPath :: (Eq v) => (v -> Bool) -> (v -> Bool) -> Graph Edge v -> Graph Edge (Maybe (Int, v), v)
-buildPath isSource isSink = propogatePath isSource . findPath isSource isSink
+buildPath isSource isSink = propagatePath isSource . findPath isSource isSink
 
 unmark :: Graph Edge (Maybe (Int, v), v) -> Graph Edge v
 unmark = vmap snd
