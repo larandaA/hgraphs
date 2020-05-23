@@ -1,25 +1,49 @@
 {-# LANGUAGE TupleSections #-}
 
 module Data.Graph.Abstract.Transform
-    ( transformu, transformd
+    ( transformu', transformu
+    , transformd', transformd
     ) where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Loops (whileM_)
 import Data.Graph.Abstract (Graph)
 import Data.Graph.Abstract.Accessor
 import qualified Data.Graph.Abstract.Accessor.Algorithm.Bfs as Bfs
+import qualified Data.Graph.Abstract.Accessor.Queue as Queue
 import qualified Data.Graph.Abstract.Accessor.Ref as Ref
 import qualified Data.Vector.Mutable as MVector
 
-bfs :: (v -> Bool) -> Accessor s e v (VArray s (Maybe Int, Maybe (Edge s)))
-bfs isStart = do
-    vs <- vfind isStart
+bfs :: (v -> Bool) -> (e -> Bool) -> Accessor s e v (VArray s (Maybe Int, Maybe (Edge s)))
+bfs isStart isAllowed = do
+    starts <- vfind isStart
     nextIdx <- Ref.new 0
-    Bfs.bfsFrom vs (Nothing, Nothing) (f nextIdx)
+    visited <- varray False
+    allowed <- ebuild (fmap isAllowed . label)
+    tree <- varray (Nothing, Nothing)
+    queue <- Queue.new
+
+    forM_ starts $ \start -> do
+        vset visited start True
+        Queue.push queue (Nothing, start)
+
+    whileM_ (not <$> Queue.empty queue) $ do
+        (parent, current) <- Queue.pop queue
+        vset tree current =<< f nextIdx parent
+
+        edges' <- outgoing current
+        forM_ edges' $ \edge -> do
+            successor <- target edge
+            visited' <- vget visited successor
+            allowed' <- eget allowed edge
+            when (not visited' && allowed') $ do
+                vset visited successor True
+                Queue.push queue (Just edge, successor)
+
+    pure tree
   where
-    f nextIdx Nothing _ = (, Nothing) <$> fmap Just (Ref.increment nextIdx)
-    f nextIdx (Just (_, e)) _ = (, Just e) <$> fmap Just (Ref.increment nextIdx)
+    f nextIdx me = (, me) <$> fmap Just (Ref.increment nextIdx)
 
 reorder :: VArray s (Maybe Int) -> Accessor s e v [Vertex s]
 reorder indices = do
@@ -38,9 +62,11 @@ reorder indices = do
   where
     mmax mx my = (max <$> mx <*> my) <|> mx <|> my
 
-transformu :: (v1 -> Bool) -> (v1 -> [(e, v2)] -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
-transformu isStart f default' g = execute g $ do
-    tree <- bfs isStart
+transformu' :: (v1 -> Bool) -> (e -> Bool)
+            -> (v1 -> [(e, v2)] -> v2) -> (v1 -> v2)
+            -> Graph e v1 -> Graph e v2
+transformu' isStart isAllowed f default' g = execute g $ do
+    tree <- bfs isStart isAllowed
     values <- vbuild (fmap default' . value)
     vs <- reorder =<< vbuild (fmap fst . vget tree)
     forM_ (reverse vs) $ \v -> do
@@ -50,10 +76,14 @@ transformu isStart f default' g = execute g $ do
         vset values v (f value' chs)
     vgraph values
 
+transformu :: (v1 -> Bool) -> (v1 -> [(e, v2)] -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
+transformu isStart = transformu' isStart (const True)
 
-transformd :: (v1 -> Bool) -> ([(v2, e)] -> v1 -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
-transformd isStart f default' g = execute g $ do
-    tree <- bfs isStart
+transformd' :: (v1 -> Bool) -> (e -> Bool)
+            -> ([(v2, e)] -> v1 -> v2) -> (v1 -> v2)
+            -> Graph e v1 -> Graph e v2
+transformd' isStart isAllowed f default' g = execute g $ do
+    tree <- bfs isStart isAllowed
     values <- vbuild (fmap default' . value)
     vs <- reorder =<< vbuild (fmap fst . vget tree)
     forM_ vs $ \v -> do
@@ -64,3 +94,6 @@ transformd isStart f default' g = execute g $ do
   where
     pred _ (_, Nothing) = pure []
     pred values (_, Just e) = fmap pure $ (,) <$> vget values (source e) <*> label e
+
+transformd :: (v1 -> Bool) -> ([(v2, e)] -> v1 -> v2) -> (v1 -> v2) -> Graph e v1 -> Graph e v2
+transformd isStart = transformd' isStart (const True)

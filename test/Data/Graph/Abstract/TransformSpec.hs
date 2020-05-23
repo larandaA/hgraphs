@@ -7,6 +7,66 @@ import qualified Data.Graph.Abstract.Common as GAC
 import qualified Data.Graph.Abstract.Transform as GAT
 import Test.Hspec
 
+transformu'Spec :: Spec
+transformu'Spec = describe "transformu'" $ do
+
+    it "should visit only center of a star with all edges disallowed" $ do
+
+        let g = GAC.star "a" ["b", "c", "d"]
+        let g' = GAT.transformu' (== "a") (const False) (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 1), ("c", 1), ("d", 1)]
+
+    it "should visit only ray vertices with allowed edges in a star" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            d <- GAB.vertex "d";
+            e <- GAB.vertex "e";
+            GAB.edge True a b;
+            GAB.edge False a c;
+            GAB.edge True a d;
+            GAB.edge False a e
+        }
+        let g' = GAT.transformu' (== "a") id (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 0), ("c", 1), ("d", 0), ("e", 1)]
+
+    it "should visit a tail of a path witha disallowed edge in the middle" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            d <- GAB.vertex "d";
+            e <- GAB.vertex "e";
+            GAB.edge True a b;
+            GAB.edge True b c;
+            GAB.edge False c d;
+            GAB.edge True d e
+        }
+        let g' = GAT.transformu' (== "a") id (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 0), ("c", 0), ("d", 1), ("e", 1)]
+
+    it "should visit a vertex with at least one allowed path" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            d <- GAB.vertex "d";
+            GAB.edge True a b;
+            GAB.edge True b c;
+            GAB.edge False a c;
+            GAB.edge False a d;
+            GAB.edge False c d
+        }
+        let g' = GAT.transformu' (== "a") id (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 0), ("c", 0), ("d", 1)]
 
 transformuSpec :: Spec
 transformuSpec = describe "transformu" $ do
@@ -79,6 +139,67 @@ transformuSpec = describe "transformu" $ do
         let g' = GAT.transformu isStart h (const 0) g
 
         GA.vertices (GA.zip g g') `shouldMatchList` [("v", 3), ("u", 3), ("w", 2), ("r", 1), ("t", 2), ("k", 1)]
+
+transformd'Spec :: Spec
+transformd'Spec = describe "transformd'" $ do
+
+    it "should visit only center of a star with all edges disallowed" $ do
+
+        let g = GAC.star "a" ["b", "c", "d"]
+        let g' = GAT.transformd' (== "a") (const False) (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 1), ("c", 1), ("d", 1)]
+
+    it "should visit only ray vertices with allowed edges in a star" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            d <- GAB.vertex "d";
+            e <- GAB.vertex "e";
+            GAB.edge True a b;
+            GAB.edge False a c;
+            GAB.edge True a d;
+            GAB.edge False a e
+        }
+        let g' = GAT.transformd' (== "a") id (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 0), ("c", 1), ("d", 0), ("e", 1)]
+
+    it "should visit a tail of a path witha disallowed edge in the middle" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            d <- GAB.vertex "d";
+            e <- GAB.vertex "e";
+            GAB.edge True a b;
+            GAB.edge True b c;
+            GAB.edge False c d;
+            GAB.edge True d e
+        }
+        let g' = GAT.transformd' (== "a") id (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 0), ("c", 0), ("d", 1), ("e", 1)]
+
+    it "should visit a vertex with at least one allowed path" $ do
+
+        let g = GAB.build $ do {
+            a <- GAB.vertex "a";
+            b <- GAB.vertex "b";
+            c <- GAB.vertex "c";
+            d <- GAB.vertex "d";
+            GAB.edge True a b;
+            GAB.edge True b c;
+            GAB.edge False a c;
+            GAB.edge False a d;
+            GAB.edge False c d
+        }
+        let g' = GAT.transformd' (== "a") id (\_ _ -> 0) (const 1) g
+
+        GA.vertices (GA.zip g g') `shouldMatchList` [("a", 0), ("b", 0), ("c", 0), ("d", 1)]
 
 transformdSpec :: Spec
 transformdSpec = describe "transformd" $ do
@@ -155,5 +276,7 @@ transformdSpec = describe "transformd" $ do
 
 spec :: Spec
 spec = describe "Data.Graph.Abstract.Transform" $ do
+    transformu'Spec
     transformuSpec
+    transformd'Spec
     transformdSpec
