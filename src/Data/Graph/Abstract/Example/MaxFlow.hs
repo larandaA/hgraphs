@@ -19,7 +19,7 @@ push :: Int -> Edge -> Edge
 push c e = e { flow = flow e + c }
 
 findPath :: (v -> Bool) -> (v -> Bool) -> Graph Edge v -> Graph Edge (Maybe (Int, v), v)
-findPath isSource isSink = transformu isSource backtrack (Nothing,)
+findPath isSource isSink = transformu' isSource ((> 0) . available) backtrack (Nothing,)
   where
     backtrack v [] = (Nothing, v)
     backtrack v ((e, (mc, u)):chs) = case mc of
@@ -28,7 +28,7 @@ findPath isSource isSink = transformu isSource backtrack (Nothing,)
         Just (c, _) -> (Just (min c (available e), u), v)
 
 propogatePath :: (v -> Bool) -> Graph Edge (Maybe (Int, v), v) -> Graph Edge (Maybe (Int, v), v)
-propogatePath isSource = transformd (isSource . snd) descend id
+propogatePath isSource = transformd' (isSource . snd) ((> 0) . available) descend id
   where
     descend [] pv = pv
     descend _ (Nothing, v) = (Nothing, v)
