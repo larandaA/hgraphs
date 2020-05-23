@@ -75,27 +75,27 @@ pop q = do
             d <- readSTRef (qData q)
             c <- capacity q
             modifySTRef (qHead q) (nextIndex_ c)
-            VM.read d h
+            VM.unsafeRead d h
 
 push_ :: STQueue s e -> e -> ST s ()
 push_ q x = do
     t <- readSTRef (qTail q)
     d <- readSTRef (qData q)
     c <- capacity q
-    VM.write d t x
+    VM.unsafeWrite d t x
     modifySTRef (qTail q) (nextIndex_ c)
 
 grow_ :: STQueue s e -> ST s ()
 grow_ q = do
     oldCap <- capacity q
     d <- readSTRef (qData q)
-    d' <- VM.grow d oldCap
+    d' <- VM.unsafeGrow d oldCap
     h <- readSTRef (qHead q)
     t <- readSTRef (qTail q)
     when (t < h) $ do
         forM_ [oldCap - 1, oldCap - 2..h] $ \i -> do
-            el <- VM.read d' i
-            VM.write d' (i + oldCap) el
+            el <- VM.unsafeRead d' i
+            VM.unsafeWrite d' (i + oldCap) el
         modifySTRef (qHead q) (+oldCap)
     writeSTRef (qData q) d'
 

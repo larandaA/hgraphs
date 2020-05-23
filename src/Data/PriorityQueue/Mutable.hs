@@ -129,7 +129,7 @@ grow_ :: STPriorityQueue s e -> ST s ()
 grow_ q = do
     oldCap <- capacity q
     d <- readSTRef (qData q)
-    d' <- VM.grow d oldCap
+    d' <- VM.unsafeGrow d oldCap
     writeSTRef (qData q) d'
 
 {-# INLINE push #-}
@@ -168,13 +168,13 @@ right (Index i) = Index $ 2 * i + 2
 get :: STPriorityQueue s e -> Index -> ST s e
 get q (Index i) = do
     d <- readSTRef (qData q)
-    VM.read d i
+    VM.unsafeRead d i
 
 {-# INLINE set #-}
 set :: STPriorityQueue s e -> Index -> e -> ST s ()
 set q (Index i) x = do
     d <- readSTRef (qData q)
-    VM.write d i x
+    VM.unsafeWrite d i x
 
 {-# INLINE append #-}
 append :: STPriorityQueue s e -> e -> ST s Index

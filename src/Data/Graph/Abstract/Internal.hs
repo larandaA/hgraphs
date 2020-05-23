@@ -50,5 +50,5 @@ buildFromList vs es = Graph
     es' = V.create $ do
         esL <- VM.replicate n []
         forM_ es $ \e -> do
-            VM.modify esL ((eAdj_ e):) (eFrom e)
+            VM.unsafeModify esL ((eAdj_ e):) (eFrom e)
         return esL

@@ -21,7 +21,10 @@ import qualified Data.Vector as V
 import Data.Vector (Vector)
 import qualified Data.Vector.Mutable as VM
 import Data.Vector.Mutable (STVector)
-import Data.Vector ((!))
+
+{-# INLINE (!) #-}
+(!) :: V.Vector a -> Int -> a
+(!) = V.unsafeIndex
 
 newtype Accessor s e v a = Accessor (Graph e v -> ST s a)
 
@@ -116,11 +119,11 @@ vbuild f = do
 
 {-# INLINE vget #-}
 vget :: VArray s a -> Vertex s -> Accessor s e v a
-vget (VArray v) (Vertex i) = liftST (VM.read v i)
+vget (VArray v) (Vertex i) = liftST (VM.unsafeRead v i)
 
 {-# INLINE vset #-}
 vset ::  VArray s a -> Vertex s -> a -> Accessor s e v ()
-vset (VArray v) (Vertex i) a = liftST (VM.write v i a)
+vset (VArray v) (Vertex i) a = liftST (VM.unsafeWrite v i a)
 
 vgraph :: VArray s a -> Accessor s e v (Graph e a)
 vgraph (VArray v) = Accessor $ \g -> fmap (\ls -> g { GAI.verts = ls } ) (V.freeze v)
@@ -158,11 +161,11 @@ ebuild f = do
 
 {-# INLINE eget #-}
 eget :: EArray s a -> Edge s -> Accessor s e v a
-eget (EArray v) (Edge (Vertex i) j) = liftST (VM.read (v ! i) j)
+eget (EArray v) (Edge (Vertex i) j) = liftST (VM.unsafeRead (v ! i) j)
 
 {-# INLINE eset #-}
 eset :: EArray s a -> Edge s -> a -> Accessor s e v ()
-eset (EArray v) (Edge (Vertex i) j) a = liftST (VM.write (v ! i) j a)
+eset (EArray v) (Edge (Vertex i) j) a = liftST (VM.unsafeWrite (v ! i) j a)
 
 egraph :: EArray s a -> Accessor s e v (Graph a v)
 egraph (EArray v) = Accessor $ \g -> do

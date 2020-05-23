@@ -12,8 +12,11 @@ import Control.Monad
 import Data.Graph.Abstract.Internal
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
-import Data.Vector ((!))
 import Prelude hiding (zip)
+
+{-# INLINE (!) #-}
+(!) :: V.Vector a -> Int -> a
+(!) = V.unsafeIndex
 
 {-# INLINE numVertices #-}
 numVertices :: Graph e v -> Int
@@ -60,7 +63,7 @@ transpose g = g { adjs =  V.map V.fromList revAdjs }
         adjL <- VM.replicate (numVertices g) []
         flip V.imapM_ (adjs g) $ \i vAdjs -> do
             V.forM_ vAdjs $ \adj -> do
-                VM.modify adjL ((adj {aTo = i}):) (aTo adj)
+                VM.unsafeModify adjL ((adj {aTo = i}):) (aTo adj)
         return adjL
 
 preds :: Graph e v -> Graph e [(v, e)]

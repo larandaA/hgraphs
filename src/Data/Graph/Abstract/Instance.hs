@@ -6,8 +6,11 @@ import qualified Data.Graph.Abstract as GA
 import qualified Data.Graph.Abstract.Builder as GAB
 import qualified Data.Graph.Abstract.Internal as GAI
 import qualified Data.List as L
-import Data.Vector ((!))
 import qualified Data.Vector as V
+
+{-# INLINE (!) #-}
+(!) :: V.Vector a -> Int -> a
+(!) = V.unsafeIndex
 
 flatten :: GA.Graph e (GA.Graph e v) -> GA.Graph e v
 flatten g = GAB.build $ do
