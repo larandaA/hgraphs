@@ -12,7 +12,7 @@ module Data.Graph.Abstract.Accessor
     , vfind, efind
     ) where
 
-import Control.Monad (join, filterM, forM_)
+import Control.Monad (join, filterM, forM_, liftM)
 import Control.Monad.ST (ST, runST)
 import qualified Data.Graph.Abstract as GA
 import Data.Graph.Abstract (Graph)
@@ -80,7 +80,7 @@ outgoing :: Vertex s -> Accessor s e v [Edge s]
 outgoing v@(Vertex i) = Accessor $ \g -> (pure . map (Edge v)) [0..(V.length (GAI.adjs g ! i)) - 1]
 
 edges :: Accessor s e v [Edge s]
-edges = vertices >>= fmap concat . sequence . fmap outgoing
+edges = pure . concat =<< traverse outgoing =<< vertices
 
 {-# INLINE label #-}
 label :: Edge s -> Accessor s e v e
@@ -91,7 +91,7 @@ target :: Edge s -> Accessor s e v (Vertex s)
 target (Edge (Vertex i) j) = Accessor $ \g -> (pure . Vertex . GAI.aTo) (GAI.adjs g ! i ! j)
 
 successors :: Vertex s -> Accessor s e v [Vertex s]
-successors v = outgoing v >>= sequence . map target
+successors v = traverse target =<< outgoing v
 
 {-# INLINE degree #-}
 degree :: Vertex s -> Accessor s e v Int
@@ -134,7 +134,7 @@ vfold f z varr = do
     pure (foldr f z vals)
 
 vfind :: (v -> Bool) -> Accessor s e v [Vertex s]
-vfind f = vertices >>= filterM (fmap f . value)
+vfind f = filterM (liftM f . value) =<< vertices
 
 newtype EArray s a = EArray (Vector (STVector s a))
 
@@ -180,4 +180,4 @@ efold f z earr = do
     pure (foldr f z vals)
 
 efind :: (e -> Bool) -> Accessor s e v [Edge s]
-efind f = edges >>= filterM (fmap f . label)
+efind f = filterM (liftM f . label) =<< edges
