@@ -1,3 +1,3 @@
 # Hgraphs Haskell Graph Library
 
-A graph library implemented in terms of Master thesis in Belarusian State University.
+A graph library implemented as a part of a master thesis for Belarusian State University.
